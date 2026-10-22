@@ -22,7 +22,9 @@ struct RotaApp: App {
         WindowGroup {
             MonthView()
                 .environment(purchases)
-                .task { await purchases.load() }
+                .task {
+                    if !PurchaseManager.isRunningTests { await purchases.load() }
+                }
         }
         .modelContainer(container)
     }

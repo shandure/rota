@@ -32,9 +32,16 @@ final class PurchaseManager {
     private(set) var lastLoadError: Error?
     private var updatesTask: Task<Void, Never>?
 
-    init() {
+    /// True when the process is an XCTest host. The app must not touch StoreKit before a test
+    /// creates its `SKTestSession`, or the process stays bound to the real App Store environment.
+    static let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        || NSClassFromString("XCTestCase") != nil
+
+    init(listenForUpdates: Bool = !PurchaseManager.isRunningTests) {
         isUnlocked = Entitlement.isUnlocked
-        updatesTask = Task { [weak self] in await self?.listenForTransactions() }
+        if listenForUpdates {
+            updatesTask = Task { [weak self] in await self?.listenForTransactions() }
+        }
     }
 
     var priceText: String { product?.displayPrice ?? Self.fallbackPrice }
