@@ -39,9 +39,9 @@ jobs:
           import re
           path = "Rota.xcodeproj/xcshareddata/xcschemes/Rota.xcscheme"
           scheme = open(path).read()
-          match = re.search(r'<StoreKitConfigurationFileReference[^>]*/>', scheme)
+          match = re.search(r'<StoreKitConfigurationFileReference.*?(/>|</StoreKitConfigurationFileReference>)', scheme, re.S)
           ref = match.group(0) if match else '<StoreKitConfigurationFileReference\n         identifier = "../../Rota/Rota.storekit">\n      </StoreKitConfigurationFileReference>'
-          if "</TestAction>" in scheme and scheme.count("StoreKitConfigurationFileReference") < 2:
+          if "</TestAction>" in scheme and scheme.count("<StoreKitConfigurationFileReference") < 2:
               scheme = scheme.replace("</TestAction>", "      " + ref + "\n   </TestAction>", 1)
               open(path, "w").write(scheme)
               print("Patched TestAction with:", ref)
