@@ -56,6 +56,8 @@ jobs:
           EOF
 
       - name: Archive (build number = run number)
+        # The archive is built unsigned: development signing would need a registered device.
+        # The export step signs it for distribution with the API key (cloud signing).
         run: |
           set -o pipefail
           xcodebuild archive \
@@ -64,12 +66,9 @@ jobs:
             -configuration Release \
             -destination "generic/platform=iOS" \
             -archivePath build/Rota.xcarchive \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$HOME/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8" \
-            -authenticationKeyID "${{ secrets.ASC_KEY_ID }}" \
-            -authenticationKeyIssuerID "${{ secrets.ASC_ISSUER_ID }}" \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
-            CODE_SIGN_STYLE=Automatic \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
             MARKETING_VERSION="${{ github.event.inputs.marketing_version }}" \
             CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
             POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
