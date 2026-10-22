@@ -87,36 +87,52 @@ jobs:
             | xcbeautify --renderer github-actions
           # Ad-hoc ("-") signing on the simulator embeds the App Group entitlement, which SwiftData requires.
 
-      - name: Screenshots (demo data, light and dark, plus empty state)
+      - name: Screenshots (demo data; test device, largest iPhone, and iPhone SE)
         if: always()
         run: |
-          UDID="${{ steps.sim.outputs.udid }}"
           APP=$(find DerivedData/Build/Products/Debug-iphonesimulator -maxdepth 1 -name "Rota.app" | head -1)
           if [ -z "$APP" ]; then echo "No Rota.app built; skipping screenshots"; exit 0; fi
-          xcrun simctl boot "$UDID" 2>/dev/null || true
-          xcrun simctl bootstatus "$UDID" -b
-          # UK phone: en_GB locale gives a Monday week start and 24-hour times.
-          xcrun simctl spawn "$UDID" defaults write "Apple Global Domain" AppleLocale -string en_GB
-          xcrun simctl spawn "$UDID" defaults write "Apple Global Domain" AppleLanguages -array en-GB
-          xcrun simctl shutdown "$UDID" && xcrun simctl boot "$UDID" && xcrun simctl bootstatus "$UDID" -b
-          xcrun simctl install "$UDID" "$APP"
+          JSON=$(xcrun simctl list devices available --json)
+          ios_devices () { echo "$JSON" | jq -r '.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | "\(.name)\t\(.udid)"'; }
+          # Release checklist sizes: the largest Pro Max and the iPhone SE, plus the test device.
+          PROMAX=$(ios_devices | grep -E "^iPhone [0-9]+ Pro Max" | sort -V | tail -1)
+          SE=$(ios_devices | grep -E "^iPhone SE" | sort -V | tail -1)
+          TEST="${{ steps.sim.outputs.name }}	${{ steps.sim.outputs.udid }}"
           mkdir -p screenshots
-          shot () {  # shot <file> <appearance> [launch args...]
-            local file=$1 mode=$2; shift 2
-            xcrun simctl ui "$UDID" appearance "$mode"
-            xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
-            xcrun simctl launch "$UDID" "$BUNDLE_ID" "$@"
-            sleep 6
-            xcrun simctl io "$UDID" screenshot "screenshots/$file"
+          shoot_device () {  # shoot_device <dir> <udid>
+            local dir=$1 udid=$2
+            echo "== $dir ($udid)"
+            xcrun simctl boot "$udid" 2>/dev/null || true
+            xcrun simctl bootstatus "$udid" -b
+            # UK phone: en_GB locale gives a Monday week start and 24-hour times.
+            xcrun simctl spawn "$udid" defaults write "Apple Global Domain" AppleLocale -string en_GB
+            xcrun simctl spawn "$udid" defaults write "Apple Global Domain" AppleLanguages -array en-GB
+            xcrun simctl shutdown "$udid" && xcrun simctl boot "$udid" && xcrun simctl bootstatus "$udid" -b
+            xcrun simctl install "$udid" "$APP"
+            mkdir -p "screenshots/$dir"
+            shot () {  # shot <file> <appearance> [launch args...]
+              local file=$1 mode=$2; shift 2
+              xcrun simctl ui "$udid" appearance "$mode"
+              xcrun simctl terminate "$udid" "$BUNDLE_ID" 2>/dev/null || true
+              xcrun simctl launch "$udid" "$BUNDLE_ID" "$@"
+              sleep 6
+              xcrun simctl io "$udid" screenshot "screenshots/$dir/$file"
+            }
+            shot month-light.png light --demo
+            shot month-dark.png dark --demo
+            shot builder-light.png light --demo --demo-builder
+            shot day-light.png light --demo --demo-day
+            shot settings-light.png light --demo --demo-settings
+            shot paywall-light.png light --demo --demo-paywall
+            shot empty-light.png light
+            xcrun simctl shutdown "$udid" || true
           }
-          shot month-light.png light --demo
-          shot month-dark.png dark --demo
-          shot builder-light.png light --demo --demo-builder
-          shot day-light.png light --demo --demo-day
-          shot settings-light.png light --demo --demo-settings
-          shot paywall-light.png light --demo --demo-paywall
-          shot empty-light.png light
-          ls -la screenshots
+          for entry in "$TEST" "$PROMAX" "$SE"; do
+            [ -z "$entry" ] && continue
+            name=$(echo "$entry" | cut -f1); udid=$(echo "$entry" | cut -f2)
+            shoot_device "$(echo "$name" | tr ' ()' '_' | tr -s '_')" "$udid"
+          done
+          find screenshots -name "*.png" | sort
 
       - name: Upload screenshots
         if: always()
