@@ -107,7 +107,9 @@ final class PurchaseManager {
     }
 
     private func setUnlocked(_ value: Bool) {
+        let changed = value != Entitlement.isUnlocked
         isUnlocked = value
         Entitlement.isUnlocked = value
+        if changed { WidgetReloader.reload() }
     }
 }

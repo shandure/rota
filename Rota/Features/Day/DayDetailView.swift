@@ -137,5 +137,6 @@ struct DayDetailView: View {
 
     private func save() {
         try? context.save()
+        WidgetReloader.reload()
     }
 }

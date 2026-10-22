@@ -150,5 +150,6 @@ struct MonthView: View {
     private func activate(_ pattern: Pattern) {
         for p in patterns { p.isActive = (p.persistentModelID == pattern.persistentModelID) }
         try? context.save()
+        WidgetReloader.reload()
     }
 }

@@ -90,6 +90,7 @@ struct SettingsView: View {
     private func activate(_ pattern: Pattern) {
         for p in patterns { p.isActive = (p.persistentModelID == pattern.persistentModelID) }
         try? context.save()
+        WidgetReloader.reload()
     }
 
     private func delete(at offsets: IndexSet) {
@@ -100,6 +101,7 @@ struct SettingsView: View {
             next.isActive = true
         }
         try? context.save()
+        WidgetReloader.reload()
     }
 
     private func move(from source: IndexSet, to destination: Int) {
@@ -107,6 +109,7 @@ struct SettingsView: View {
         ordered.move(fromOffsets: source, toOffset: destination)
         for (index, pattern) in ordered.enumerated() { pattern.sortOrder = index }
         try? context.save()
+        WidgetReloader.reload()
     }
 
     // MARK: Widget

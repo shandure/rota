@@ -247,6 +247,7 @@ struct PatternBuilderView: View {
             // Overrides are untouched (§4.2: saving an edited pattern keeps existing overrides).
         }
         try? context.save()
+        WidgetReloader.reload()
         dismiss()
     }
 
@@ -257,6 +258,7 @@ struct PatternBuilderView: View {
             next.isActive = true
         }
         try? context.save()
+        WidgetReloader.reload()
         dismiss()
     }
 }

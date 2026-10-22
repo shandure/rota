@@ -34,6 +34,7 @@ targets:
     dependencies:
       - target: RotaCore
         embed: true
+      - target: RotaWidget
     entitlements:
       path: Rota/Rota.entitlements
       properties:
@@ -49,6 +50,29 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.yourname.rota
         INFOPLIST_KEY_UIUserInterfaceStyle: Automatic
+  RotaWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - RotaWidget
+      - path: Rota/Design        # shared design tokens; same files, both targets
+    dependencies:
+      - target: RotaCore
+        embed: false             # the app embeds RotaCore; the extension links it
+    entitlements:
+      path: RotaWidget/RotaWidget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.yourname.rota]
+    info:
+      path: RotaWidget/Info.plist
+      properties:
+        CFBundleDisplayName: Rota
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.yourname.rota.widget
+        SKIP_INSTALL: YES
   RotaTests:
     type: bundle.unit-test
     platform: iOS
@@ -72,6 +96,7 @@ schemes:
       targets:
         Rota: all
         RotaCore: all
+        RotaWidget: all
         RotaTests: [test]
     run:
       config: Debug
