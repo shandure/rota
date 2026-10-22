@@ -88,6 +88,18 @@ jobs:
             | xcbeautify --renderer github-actions
           echo "Uploaded build ${{ github.run_number }} (version ${{ github.event.inputs.marketing_version }}). It appears in TestFlight after Apple processes it, usually within 15 minutes."
 
+      - name: Show signed entitlements (app and widget)
+        if: always()
+        run: |
+          IPA=$(find build/export -name "*.ipa" | head -1)
+          if [ -z "$IPA" ]; then echo "No ipa found"; exit 0; fi
+          rm -rf build/ipa && mkdir -p build/ipa && unzip -q "$IPA" -d build/ipa
+          APP=$(find build/ipa/Payload -maxdepth 1 -name "*.app" | head -1)
+          echo "== $APP"; codesign -d --entitlements :- "$APP" 2>/dev/null
+          for EXT in "$APP"/PlugIns/*.appex; do
+            echo "== $EXT"; codesign -d --entitlements :- "$EXT" 2>/dev/null
+          done
+
       - name: Upload archive logs
         if: failure()
         uses: actions/upload-artifact@v4
