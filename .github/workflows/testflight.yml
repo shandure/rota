@@ -56,9 +56,9 @@ jobs:
           EOF
 
       - name: Archive (build number = run number)
-        # Ad-hoc signed ("-"): needs no profile, certificate or registered device, but still
-        # embeds the entitlements (App Group) in the archive. An unsigned archive loses them at
-        # export. The export step re-signs for distribution with the API key.
+        # Built unsigned: development signing needs a registered device and ad-hoc signing is
+        # refused by the iOS SDK. The next step restores the entitlements the export re-signing
+        # reads, and the export step signs for distribution with the API key.
         run: |
           set -o pipefail
           xcodebuild archive \
@@ -68,15 +68,37 @@ jobs:
             -destination "generic/platform=iOS" \
             -archivePath build/Rota.xcarchive \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY=- \
+            CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=YES \
-            PROVISIONING_PROFILE_SPECIFIER= \
             MARKETING_VERSION="${{ github.event.inputs.marketing_version }}" \
             CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
             POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
             | xcbeautify --renderer github-actions
+
+      - name: Embed entitlements in the unsigned archive
+        # Xcode re-signs from each bundle's archived-expanded-entitlements.xcent at export.
+        # An unsigned build has none, so the App Group entitlement would be dropped.
+        run: |
+          TEAM="${{ secrets.APPLE_TEAM_ID }}"
+          APP=build/Rota.xcarchive/Products/Applications/Rota.app
+          write_xcent () {  # write_xcent <bundle dir> <bundle id>
+            cat > "$1/archived-expanded-entitlements.xcent" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>application-identifier</key><string>$TEAM.$2</string>
+            <key>com.apple.developer.team-identifier</key><string>$TEAM</string>
+            <key>com.apple.security.application-groups</key>
+            <array><string>group.com.rotashift.rota</string></array>
+            <key>get-task-allow</key><false/>
+          </dict>
+          </plist>
+          EOF
+            echo "wrote $1/archived-expanded-entitlements.xcent"
+          }
+          write_xcent "$APP" "$BUNDLE_ID"
+          write_xcent "$APP/PlugIns/RotaWidget.appex" "$BUNDLE_ID.widget"
 
       - name: Upload to App Store Connect
         run: |
