@@ -62,7 +62,7 @@ final class CalendarPlannerTests: XCTestCase {
         XCTAssertEqual(CalendarPlanner.patternID(from: url), p.id)
         XCTAssertNil(CalendarPlanner.patternID(from: URL(string: "https://example.com/pattern/x/y")))
         XCTAssertNil(CalendarPlanner.patternID(from: nil))
-        let events = januaryEvents()
+        let events = CalendarPlanner.events(for: p, from: Fixtures.day(2026, 1, 1), months: 1, calendar: cal)
         XCTAssertTrue(events.allSatisfy { CalendarPlanner.patternID(from: $0.url) == p.id })
         XCTAssertEqual(Set(events.map(\.url)).count, events.count, "one URL per day")
     }
