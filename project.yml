@@ -49,6 +49,8 @@ targets:
       path: Rota/Info.plist
       properties:
         CFBundleDisplayName: Rota
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         # iPhone-only app, but App Store validation still checks the iPad orientation set.
@@ -83,6 +85,8 @@ targets:
       path: RotaWidget/Info.plist
       properties:
         CFBundleDisplayName: Rota
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
