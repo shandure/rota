@@ -31,7 +31,24 @@ jobs:
         run: brew install xcodegen xcbeautify
 
       - name: Generate Xcode project
-        run: xcodegen generate
+        run: |
+          xcodegen generate
+          # Attach the StoreKit configuration to the scheme's Test action as well as Run, so
+          # the test host runs against the local StoreKit environment (XcodeGen only sets Run).
+          python3 - <<'PY'
+          import re
+          path = "Rota.xcodeproj/xcshareddata/xcschemes/Rota.xcscheme"
+          scheme = open(path).read()
+          match = re.search(r'<StoreKitConfigurationFileReference[^>]*/>', scheme)
+          ref = match.group(0) if match else '<StoreKitConfigurationFileReference\n         identifier = "../../Rota/Rota.storekit">\n      </StoreKitConfigurationFileReference>'
+          if "</TestAction>" in scheme and scheme.count("StoreKitConfigurationFileReference") < 2:
+              scheme = scheme.replace("</TestAction>", "      " + ref + "\n   </TestAction>", 1)
+              open(path, "w").write(scheme)
+              print("Patched TestAction with:", ref)
+          else:
+              print("TestAction not patched")
+          PY
+          grep -n -A2 "StoreKitConfigurationFileReference" Rota.xcodeproj/xcshareddata/xcschemes/Rota.xcscheme
 
       - name: Pick a simulator
         id: sim
