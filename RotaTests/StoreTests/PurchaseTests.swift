@@ -87,10 +87,42 @@ final class PurchaseTests: XCTestCase {
         } catch {
             direct = "direct fetch threw \(error)"
         }
+        let legacy = await LegacyProductFetch.run(productID: PurchaseManager.productID)
         XCTFail("StoreKit test session never served \(PurchaseManager.productID); " +
                 "last error: \(String(describing: manager.lastLoadError)); \(direct); " +
-                "session transactions: \(session.allTransactions().count)")
+                "StoreKit 1: \(legacy); session transactions: \(session.allTransactions().count)")
         return manager
+    }
+
+    /// StoreKit 1 product request, used only to diagnose an empty StoreKit 2 result.
+    private final class LegacyProductFetch: NSObject, SKProductsRequestDelegate {
+        private var continuation: CheckedContinuation<String, Never>?
+        private var request: SKProductsRequest?
+
+        static func run(productID: String) async -> String {
+            let fetch = LegacyProductFetch()
+            return await withCheckedContinuation { continuation in
+                fetch.continuation = continuation
+                let request = SKProductsRequest(productIdentifiers: [productID])
+                request.delegate = fetch
+                fetch.request = request
+                request.start()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 10) { fetch.finish("timed out") }
+            }
+        }
+
+        func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
+            finish("\(response.products.count) products, invalid ids \(response.invalidProductIdentifiers)")
+        }
+
+        func request(_ request: SKRequest, didFailWithError error: Error) {
+            finish("failed: \(error)")
+        }
+
+        private func finish(_ result: String) {
+            continuation?.resume(returning: result)
+            continuation = nil
+        }
     }
 
     private struct TimedOut: Error {}

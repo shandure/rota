@@ -79,6 +79,13 @@ jobs:
             | xcbeautify --renderer github-actions
           # Ad-hoc ("-") signing on the simulator embeds the App Group entitlement, which SwiftData requires.
 
+      - name: Simulator StoreKit log (diagnostics)
+        if: always()
+        run: |
+          xcrun simctl spawn "${{ steps.sim.outputs.udid }}" log show --last 20m --style compact \
+            --predicate 'subsystem CONTAINS[c] "storekit" OR process CONTAINS[c] "storekit" OR eventMessage CONTAINS[c] "storekit"' 2>/dev/null \
+            | grep -v -i "analytics" | tail -120 || true
+
       - name: Screenshots (demo data, light and dark, plus empty state)
         if: always()
         run: |
