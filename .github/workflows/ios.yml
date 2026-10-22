@@ -87,6 +87,7 @@ jobs:
           shot month-light.png light --demo
           shot month-dark.png dark --demo
           shot builder-light.png light --demo --demo-builder
+          shot day-light.png light --demo --demo-day
           shot empty-light.png light
           ls -la screenshots
 

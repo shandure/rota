@@ -9,8 +9,12 @@ enum DemoData {
     /// With `--demo`, opens the pattern builder on the demo pattern at launch (screenshots).
     static let builderArgument = "--demo-builder"
 
+    /// With `--demo`, opens Day Detail for today at launch (screenshots).
+    static let dayArgument = "--demo-day"
+
     static var isRequested: Bool { CommandLine.arguments.contains(launchArgument) }
     static var opensBuilder: Bool { isRequested && CommandLine.arguments.contains(builderArgument) }
+    static var opensDay: Bool { isRequested && CommandLine.arguments.contains(dayArgument) }
 
     @MainActor
     static func seed(_ container: ModelContainer) {

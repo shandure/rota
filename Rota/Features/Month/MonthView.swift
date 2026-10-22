@@ -28,15 +28,17 @@ struct MonthView: View {
                 }
             }
             .onAppear {
-                if DemoData.opensBuilder, let pattern = activePattern { builder = .edit(pattern) }
+                guard let pattern = activePattern else { return }
+                if DemoData.opensBuilder { builder = .edit(pattern) }
+                if DemoData.opensDay { selectedDay = RotaEngine.entry(on: today, for: pattern, calendar: calendar) }
             }
             .navigationTitle(visibleMonth.formatted(.dateTime.month(.wide).year()))
             .navigationBarTitleDisplayMode(.large)
             .toolbar { toolbarContent }
             .sheet(item: $selectedDay) { day in
-                // Day Detail arrives in Step 4; this keeps tap-through working meanwhile.
-                PlaceholderSheet(title: day.date.formatted(.dateTime.weekday(.wide).day().month(.wide)),
-                                 detail: day.shift.spokenName)
+                if let pattern = activePattern {
+                    DayDetailView(date: day.date, pattern: pattern)
+                }
             }
             .sheet(item: $builder) { mode in
                 PatternBuilderView(mode: mode)

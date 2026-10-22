@@ -15,12 +15,24 @@ extension ShiftType {
         return "\(Self.clock(start)) to \(Self.clock(end))"
     }
 
+    /// "Night", "Off", "Holiday", "Sick", or the custom label: the name shown outside a grid cell.
+    var displayName: String {
+        if isOff { return "Off" }
+        if isSameType(as: .holiday) { return "Holiday" }
+        if isSameType(as: .sick) { return "Sick" }
+        return label
+    }
+
     /// "Night shift", "Off", "Holiday", "Sick", or the custom label.
     var spokenName: String {
-        if isOff { return "Off" }
-        if self == .holiday { return "Holiday" }
-        if self == .sick { return "Sick" }
-        return kind == .custom ? label : "\(label) shift"
+        if isOff || isAbsence || kind == .custom { return displayName }
+        return "\(label) shift"
+    }
+
+    /// Day Detail pill text: "Night · 19:00–07:00", or just the name for untimed shifts.
+    var pillText: String {
+        if let times = timeRangeText { return "\(displayName) · \(times)" }
+        return displayName
     }
 
     private static func clock(_ components: DateComponents) -> String {

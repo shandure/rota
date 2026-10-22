@@ -66,6 +66,12 @@ public struct ShiftType: Codable, Hashable, Sendable {
     /// and the widget's "Next:" line.
     public var isWorked: Bool { !isOff && !isAbsence }
 
+    /// Same kind and label, ignoring times and colour. Used to match an override against the
+    /// cycle's shift and to pick the selected chip in Day Detail.
+    public func isSameType(as other: ShiftType) -> Bool {
+        kind == other.kind && label == other.label
+    }
+
     /// True when the end is not after the start (e.g. Night 19:00–07:00).
     public var crossesMidnight: Bool {
         guard let start = startMinute, let end = endMinute else { return false }

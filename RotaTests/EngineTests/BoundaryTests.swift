@@ -125,6 +125,18 @@ final class BoundaryTests: XCTestCase {
         XCTAssertFalse(custom.crossesMidnight)
     }
 
+    func testIsSameTypeIgnoresTimesAndColour() {
+        var lateNight = ShiftType.night
+        lateNight.startTime = ShiftType.time(20)
+        lateNight.colorHex = "#000000"
+        XCTAssertTrue(ShiftType.night.isSameType(as: lateNight))
+        XCTAssertFalse(ShiftType.night.isSameType(as: .day))
+        XCTAssertFalse(ShiftType.holiday.isSameType(as: .sick))
+        XCTAssertTrue(ShiftType.off.isSameType(as: .off))
+        let twi = ShiftType(kind: .custom, label: "TWI", colorHex: "#FF6B6B")
+        XCTAssertFalse(twi.isSameType(as: .holiday))
+    }
+
     func testShiftTypeRoundTripsThroughCodable() throws {
         let cycle = Fixtures.twoDayTwoNightFourOff + [.holiday, .sick]
         let data = try JSONEncoder().encode(cycle)
