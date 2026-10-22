@@ -16,6 +16,8 @@ public final class Pattern {
     public var createdAt: Date
     /// Only one pattern is active at a time; it drives the widget.
     public var isActive: Bool
+    /// Position in the Settings list and the toolbar menu (user-reorderable, §4.4).
+    public var sortOrder: Int = 0
     @Relationship(deleteRule: .cascade, inverse: \Override.pattern)
     public var overrides: [Override]
 
@@ -25,6 +27,7 @@ public final class Pattern {
                 cycle: [ShiftType],
                 createdAt: Date,
                 isActive: Bool = false,
+                sortOrder: Int = 0,
                 overrides: [Override] = []) {
         self.id = id
         self.name = name
@@ -32,8 +35,15 @@ public final class Pattern {
         self.cycle = cycle
         self.createdAt = createdAt
         self.isActive = isActive
+        self.sortOrder = sortOrder
         self.overrides = overrides
     }
+
+    /// Sort descriptors for every list of patterns in the app.
+    public static let listOrder: [SortDescriptor<Pattern>] = [
+        SortDescriptor(\Pattern.sortOrder),
+        SortDescriptor(\Pattern.createdAt),
+    ]
 
     /// Plain-value copy for `RotaEngine` and the widget.
     public var snapshot: PatternSnapshot {

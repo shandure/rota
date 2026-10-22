@@ -12,9 +12,13 @@ enum DemoData {
     /// With `--demo`, opens Day Detail for today at launch (screenshots).
     static let dayArgument = "--demo-day"
 
+    /// With `--demo`, opens Settings at launch (screenshots).
+    static let settingsArgument = "--demo-settings"
+
     static var isRequested: Bool { CommandLine.arguments.contains(launchArgument) }
     static var opensBuilder: Bool { isRequested && CommandLine.arguments.contains(builderArgument) }
     static var opensDay: Bool { isRequested && CommandLine.arguments.contains(dayArgument) }
+    static var opensSettings: Bool { isRequested && CommandLine.arguments.contains(settingsArgument) }
 
     @MainActor
     static func seed(_ container: ModelContainer) {
@@ -29,6 +33,13 @@ enum DemoData {
                               isActive: true)
         let context = container.mainContext
         context.insert(pattern)
+        let second = Pattern(name: "Bank shifts",
+                             startDate: start,
+                             cycle: Preset.fourOnFourOff.cycle,
+                             createdAt: today,
+                             isActive: false,
+                             sortOrder: 1)
+        context.insert(second)
 
         func day(_ offset: Int) -> Date { calendar.date(byAdding: .day, value: offset, to: today) ?? today }
         let holiday = Override(date: day(5), shift: .holiday, note: "Cornwall", pattern: pattern)

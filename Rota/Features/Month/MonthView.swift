@@ -5,13 +5,13 @@ import RotaCore
 /// Home screen: one month of the active pattern (§4.1).
 struct MonthView: View {
     @Environment(\.modelContext) private var context
-    @Query(sort: \Pattern.createdAt) private var patterns: [Pattern]
+    @Query(sort: Pattern.listOrder) private var patterns: [Pattern]
 
     @State private var visibleMonth = RotaEngine.startOfMonth(containing: Calendar.current.startOfDay(for: .now))
     @State private var slideFrom: Edge = .trailing
     @State private var selectedDay: DayShift?
     @State private var builder: PatternBuilderView.Mode?
-    @State private var placeholder: Placeholder?
+    @State private var showingSettings = false
 
     private var calendar: Calendar { .current }
     private var today: Date { calendar.startOfDay(for: .now) }
@@ -31,6 +31,7 @@ struct MonthView: View {
                 guard let pattern = activePattern else { return }
                 if DemoData.opensBuilder { builder = .edit(pattern) }
                 if DemoData.opensDay { selectedDay = RotaEngine.entry(on: today, for: pattern, calendar: calendar) }
+                if DemoData.opensSettings { showingSettings = true }
             }
             .navigationTitle(visibleMonth.formatted(.dateTime.month(.wide).year()))
             .navigationBarTitleDisplayMode(.large)
@@ -43,8 +44,8 @@ struct MonthView: View {
             .sheet(item: $builder) { mode in
                 PatternBuilderView(mode: mode)
             }
-            .sheet(item: $placeholder) { item in
-                PlaceholderSheet(title: item.title, detail: item.detail)
+            .sheet(isPresented: $showingSettings) {
+                SettingsView()
             }
         }
     }
@@ -88,7 +89,7 @@ struct MonthView: View {
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             Button {
-                placeholder = .settings
+                showingSettings = true
             } label: {
                 Label("Settings", systemImage: "gearshape")
             }
@@ -148,47 +149,6 @@ struct MonthView: View {
 
     private func activate(_ pattern: Pattern) {
         for p in patterns { p.isActive = (p.persistentModelID == pattern.persistentModelID) }
-    }
-}
-
-// MARK: - Placeholders for screens built in later steps
-
-private enum Placeholder: String, Identifiable {
-    case settings
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .settings: return "Settings"
-        }
-    }
-
-    var detail: String {
-        switch self {
-        case .settings: return "Built in Step 5."
-        }
-    }
-}
-
-private struct PlaceholderSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    let title: String
-    let detail: String
-
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: Spacing.s8) {
-                Text(title).font(Typography.emptyHeadline)
-                Text(detail).foregroundStyle(.secondary)
-            }
-            .padding(Spacing.screen)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
-        }
-        .presentationDetents([.medium])
+        try? context.save()
     }
 }

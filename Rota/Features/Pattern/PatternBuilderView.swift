@@ -20,7 +20,7 @@ struct PatternBuilderView: View {
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
-    @Query(sort: \Pattern.createdAt) private var patterns: [Pattern]
+    @Query(sort: Pattern.listOrder) private var patterns: [Pattern]
 
     @State private var name: String
     @State private var cells: [CycleCell]
@@ -219,7 +219,8 @@ struct PatternBuilderView: View {
         switch mode {
         case .create:
             // Second-pattern paywall gate arrives in Step 6.
-            let pattern = Pattern(name: trimmedName, startDate: day, cycle: cycle, createdAt: .now, isActive: true)
+            let pattern = Pattern(name: trimmedName, startDate: day, cycle: cycle, createdAt: .now, isActive: true,
+                                  sortOrder: (patterns.map(\.sortOrder).max() ?? -1) + 1)
             for existing in patterns { existing.isActive = false }
             context.insert(pattern)
         case .edit(let pattern):
