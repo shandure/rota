@@ -51,6 +51,9 @@ targets:
     type: bundle.unit-test
     platform: iOS
     sources: [RotaTests]
+    info:
+      path: RotaTests/Info.plist
+      properties: {}
     dependencies:
       - target: RotaCore
       - target: Rota
