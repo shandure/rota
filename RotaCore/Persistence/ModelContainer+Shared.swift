@@ -9,12 +9,22 @@ public enum Store {
 
     public static let schema = Schema([Pattern.self, Override.self])
 
+    public enum StoreError: Error {
+        /// The process has no App Group entitlement, so the shared container cannot be used.
+        case appGroupUnavailable
+    }
+
     /// Creates the shared container. Call once per process and keep the result.
+    /// Throws `StoreError.appGroupUnavailable` instead of letting SwiftData trap when the
+    /// entitlement is missing (e.g. an unsigned build).
     public static func sharedContainer(inMemory: Bool = false) throws -> ModelContainer {
         let configuration: ModelConfiguration
         if inMemory {
             configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         } else {
+            guard FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) != nil else {
+                throw StoreError.appGroupUnavailable
+            }
             configuration = ModelConfiguration("Rota",
                                                schema: schema,
                                                groupContainer: .identifier(appGroupID))

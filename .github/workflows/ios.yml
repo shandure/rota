@@ -57,8 +57,10 @@ jobs:
             -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.udid }}" \
             -derivedDataPath DerivedData \
             -resultBundlePath TestResults.xcresult \
-            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY=- \
+            CODE_SIGNING_REQUIRED=NO \
             | xcbeautify --renderer github-actions
+          # Ad-hoc ("-") signing on the simulator embeds the App Group entitlement, which SwiftData requires.
 
       - name: Screenshots (demo data, light and dark, plus empty state)
         if: always()
