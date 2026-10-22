@@ -1,15 +1,19 @@
 import Foundation
 
 /// One kind of shift as it appears in a cycle or an override (§3).
+///
+/// Times are stored as minutes after midnight (`startMinute` / `endMinute`) because SwiftData
+/// cannot persist `DateComponents` inside a struct. `startTime` / `endTime` expose them as the
+/// spec's hour+minute components.
 public struct ShiftType: Codable, Hashable, Sendable {
     public var kind: ShiftKind
     /// "Day", "Night", "Off", or user text for `.custom` (max `Limits.maxCustomLabelLength`).
     public var label: String
     public var colorHex: String
-    /// Hour + minute. `nil` for `.off` and for all-day absences.
-    public var startTime: DateComponents?
-    /// Hour + minute. May be earlier than `startTime`, meaning the shift crosses midnight.
-    public var endTime: DateComponents?
+    /// Minutes after midnight. `nil` for `.off` and for all-day absences.
+    public var startMinute: Int?
+    /// Minutes after midnight. May be less than or equal to `startMinute`, meaning the shift crosses midnight.
+    public var endMinute: Int?
 
     public init(kind: ShiftKind,
                 label: String,
@@ -19,13 +23,34 @@ public struct ShiftType: Codable, Hashable, Sendable {
         self.kind = kind
         self.label = label
         self.colorHex = colorHex
-        self.startTime = startTime
-        self.endTime = endTime
+        self.startMinute = startTime.flatMap(Self.minutes)
+        self.endMinute = endTime.flatMap(Self.minutes)
+    }
+
+    /// Hour + minute. `nil` for `.off` and for all-day absences.
+    public var startTime: DateComponents? {
+        get { startMinute.map(Self.components) }
+        set { startMinute = newValue.flatMap(Self.minutes) }
+    }
+
+    /// Hour + minute. May be earlier than `startTime`, meaning the shift crosses midnight.
+    public var endTime: DateComponents? {
+        get { endMinute.map(Self.components) }
+        set { endMinute = newValue.flatMap(Self.minutes) }
     }
 
     /// Builds an hour+minute component for `startTime` / `endTime`.
     public static func time(_ hour: Int, _ minute: Int = 0) -> DateComponents {
         DateComponents(hour: hour, minute: minute)
+    }
+
+    private static func minutes(_ components: DateComponents) -> Int? {
+        guard let hour = components.hour else { return nil }
+        return hour * 60 + (components.minute ?? 0)
+    }
+
+    private static func components(_ minutes: Int) -> DateComponents {
+        DateComponents(hour: minutes / 60, minute: minutes % 60)
     }
 
     // MARK: Derived
@@ -41,13 +66,10 @@ public struct ShiftType: Codable, Hashable, Sendable {
     /// and the widget's "Next:" line.
     public var isWorked: Bool { !isOff && !isAbsence }
 
-    /// True when `endTime` is not after `startTime` (e.g. Night 19:00–07:00).
+    /// True when the end is not after the start (e.g. Night 19:00–07:00).
     public var crossesMidnight: Bool {
-        guard let s = startTime, let e = endTime,
-              let sh = s.hour, let eh = e.hour else { return false }
-        let sm = sh * 60 + (s.minute ?? 0)
-        let em = eh * 60 + (e.minute ?? 0)
-        return em <= sm
+        guard let start = startMinute, let end = endMinute else { return false }
+        return end <= start
     }
 
     // MARK: Built-ins (§4.2 defaults, §6 palette)
