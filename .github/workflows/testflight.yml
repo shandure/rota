@@ -1,0 +1,98 @@
+name: TestFlight
+
+# Manual: builds a signed App Store archive on a macOS runner and uploads it to App Store Connect.
+# Signing is automatic ("cloud signing") using an App Store Connect API key, so no Mac, no
+# certificates and no profiles are handled by hand. Needs repository secrets:
+#   ASC_KEY_ID, ASC_ISSUER_ID, ASC_API_KEY_P8 (contents of the .p8), APPLE_TEAM_ID,
+#   and optionally POSTHOG_API_KEY.
+on:
+  workflow_dispatch:
+    inputs:
+      marketing_version:
+        description: "Version shown in the App Store, e.g. 1.0"
+        default: "1.0"
+        required: true
+
+env:
+  SCHEME: Rota
+  BUNDLE_ID: com.rotashift.rota
+
+jobs:
+  upload:
+    name: Archive and upload
+    runs-on: macos-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen and xcbeautify
+        run: brew install xcodegen xcbeautify
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Write the App Store Connect API key
+        run: |
+          mkdir -p "$HOME/private_keys"
+          printf '%s' "${{ secrets.ASC_API_KEY_P8 }}" > "$HOME/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8"
+          chmod 600 "$HOME/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8"
+
+      - name: Export options
+        run: |
+          cat > ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>teamID</key><string>${{ secrets.APPLE_TEAM_ID }}</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Archive (build number = run number)
+        run: |
+          set -o pipefail
+          xcodebuild archive \
+            -project Rota.xcodeproj \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath build/Rota.xcarchive \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8" \
+            -authenticationKeyID "${{ secrets.ASC_KEY_ID }}" \
+            -authenticationKeyIssuerID "${{ secrets.ASC_ISSUER_ID }}" \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            CODE_SIGN_STYLE=Automatic \
+            MARKETING_VERSION="${{ github.event.inputs.marketing_version }}" \
+            CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
+            POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
+            | xcbeautify --renderer github-actions
+
+      - name: Upload to App Store Connect
+        run: |
+          set -o pipefail
+          xcodebuild -exportArchive \
+            -archivePath build/Rota.xcarchive \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath build/export \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8" \
+            -authenticationKeyID "${{ secrets.ASC_KEY_ID }}" \
+            -authenticationKeyIssuerID "${{ secrets.ASC_ISSUER_ID }}" \
+            | xcbeautify --renderer github-actions
+          echo "Uploaded build ${{ github.run_number }} (version ${{ github.event.inputs.marketing_version }}). It appears in TestFlight after Apple processes it, usually within 15 minutes."
+
+      - name: Upload archive logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: export-logs
+          path: build/export
+          if-no-files-found: ignore
