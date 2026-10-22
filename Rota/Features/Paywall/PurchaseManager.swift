@@ -28,6 +28,8 @@ final class PurchaseManager {
 
     private(set) var isUnlocked: Bool
     private(set) var product: Product?
+    /// The last error from loading the product, for diagnostics.
+    private(set) var lastLoadError: Error?
     private var updatesTask: Task<Void, Never>?
 
     init() {
@@ -40,7 +42,12 @@ final class PurchaseManager {
     /// Loads the product and refreshes the entitlement. Safe to call more than once.
     func load() async {
         if product == nil {
-            product = try? await Product.products(for: [Self.productID]).first
+            do {
+                product = try await Product.products(for: [Self.productID]).first
+                lastLoadError = nil
+            } catch {
+                lastLoadError = error
+            }
         }
         await refreshEntitlement()
     }

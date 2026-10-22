@@ -1,4 +1,5 @@
 import XCTest
+import StoreKit
 import StoreKitTest
 import RotaCore
 @testable import Rota
@@ -71,7 +72,16 @@ final class PurchaseTests: XCTestCase {
             if manager.product != nil { return manager }
             try await Task.sleep(for: .milliseconds(500))
         }
-        XCTFail("StoreKit test session never served \(PurchaseManager.productID)")
+        let direct: String
+        do {
+            let products = try await Product.products(for: [PurchaseManager.productID])
+            direct = "direct fetch returned \(products.count) products"
+        } catch {
+            direct = "direct fetch threw \(error)"
+        }
+        XCTFail("StoreKit test session never served \(PurchaseManager.productID); " +
+                "last error: \(String(describing: manager.lastLoadError)); \(direct); " +
+                "session transactions: \(session.allTransactions().count)")
         return manager
     }
 
