@@ -23,9 +23,10 @@ enum Palette {
         darkLabelFills.contains(shift.colorHex.uppercased()) ? .black : .white
     }
 
-    /// The override dot colour; an Off override has no shift colour so uses secondary.
+    /// The override dot. On a filled cell it uses the label colour so it stays visible against
+    /// the shift colour; an Off override has no fill, so it uses secondary.
     static func dot(for shift: ShiftType) -> Color {
-        shift.isOff ? .secondary : Color(hex: shift.colorHex)
+        shift.isOff ? .secondary : label(for: shift)
     }
 }
 

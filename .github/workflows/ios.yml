@@ -70,6 +70,10 @@ jobs:
           if [ -z "$APP" ]; then echo "No Rota.app built; skipping screenshots"; exit 0; fi
           xcrun simctl boot "$UDID" 2>/dev/null || true
           xcrun simctl bootstatus "$UDID" -b
+          # UK phone: en_GB locale gives a Monday week start and 24-hour times.
+          xcrun simctl spawn "$UDID" defaults write "Apple Global Domain" AppleLocale -string en_GB
+          xcrun simctl spawn "$UDID" defaults write "Apple Global Domain" AppleLanguages -array en-GB
+          xcrun simctl shutdown "$UDID" && xcrun simctl boot "$UDID" && xcrun simctl bootstatus "$UDID" -b
           xcrun simctl install "$UDID" "$APP"
           mkdir -p screenshots
           shot () {  # shot <file> <appearance> [launch args...]

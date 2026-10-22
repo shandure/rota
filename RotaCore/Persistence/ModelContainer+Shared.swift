@@ -22,14 +22,20 @@ public enum Store {
         if inMemory {
             configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         } else {
-            guard FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) != nil else {
-                throw StoreError.appGroupUnavailable
-            }
-            configuration = ModelConfiguration("Rota",
-                                               schema: schema,
-                                               groupContainer: .identifier(appGroupID))
+            configuration = ModelConfiguration("Rota", schema: schema, url: try sharedStoreURL())
         }
         return try ModelContainer(for: schema, configurations: [configuration])
+    }
+
+    /// `<App Group>/Library/Application Support/Rota.store`, creating the directory if needed.
+    /// SwiftData does not create intermediate directories inside a group container itself.
+    public static func sharedStoreURL() throws -> URL {
+        guard let group = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) else {
+            throw StoreError.appGroupUnavailable
+        }
+        let directory = group.appendingPathComponent("Library/Application Support", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return directory.appendingPathComponent("Rota.store")
     }
 
     /// A persistent store in the app's own container, not shared with the widget.
