@@ -34,7 +34,7 @@ final class PurchaseManager {
 
     /// True when the process is an XCTest host. The app must not touch StoreKit before a test
     /// creates its `SKTestSession`, or the process stays bound to the real App Store environment.
-    static let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    nonisolated static let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
         || NSClassFromString("XCTestCase") != nil
 
     init(listenForUpdates: Bool = !PurchaseManager.isRunningTests) {

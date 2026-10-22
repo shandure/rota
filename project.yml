@@ -51,6 +51,13 @@ targets:
         CFBundleDisplayName: Rota
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        # iPhone-only app, but App Store validation still checks the iPad orientation set.
+        UIRequiresFullScreen: true
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
         ITSAppUsesNonExemptEncryption: false
         NSCalendarsFullAccessUsageDescription: Rota adds your shifts to a calendar of its own. It never changes your other calendars.
         PostHogAPIKey: $(POSTHOG_API_KEY)
