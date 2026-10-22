@@ -21,7 +21,10 @@ struct PatternBuilderView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @Query(sort: Pattern.listOrder) private var patterns: [Pattern]
+    @Environment(PurchaseManager.self) private var purchases
 
+    @State private var showingPaywall = false
+    @State private var saveAfterPaywall = false
     @State private var name: String
     @State private var cells: [CycleCell]
     @State private var startDate: Date
@@ -166,6 +169,16 @@ struct PatternBuilderView: View {
                     if cells.count < Limits.maxCycleLength { cells.append(CycleCell(shift: shift)) }
                 }
             }
+            .fullScreenCover(isPresented: $showingPaywall) {
+                PaywallView(trigger: .secondPattern)
+            }
+            .onChange(of: showingPaywall) { _, shown in
+                // Form state is kept; if the purchase went through, finish the save the user asked for.
+                if !shown && saveAfterPaywall {
+                    saveAfterPaywall = false
+                    if purchases.isUnlocked { save() }
+                }
+            }
             .onAppear {
                 if isCreate { nameFocused = true }
             }
@@ -218,7 +231,11 @@ struct PatternBuilderView: View {
         let day = calendar.startOfDay(for: startDate)
         switch mode {
         case .create:
-            // Second-pattern paywall gate arrives in Step 6.
+            if !patterns.isEmpty && !purchases.isUnlocked {
+                saveAfterPaywall = true
+                showingPaywall = true
+                return
+            }
             let pattern = Pattern(name: trimmedName, startDate: day, cycle: cycle, createdAt: .now, isActive: true,
                                   sortOrder: (patterns.map(\.sortOrder).max() ?? -1) + 1)
             for existing in patterns { existing.isActive = false }

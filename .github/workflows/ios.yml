@@ -89,6 +89,7 @@ jobs:
           shot builder-light.png light --demo --demo-builder
           shot day-light.png light --demo --demo-day
           shot settings-light.png light --demo --demo-settings
+          shot paywall-light.png light --demo --demo-paywall
           shot empty-light.png light
           ls -la screenshots
 

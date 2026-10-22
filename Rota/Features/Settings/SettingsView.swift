@@ -7,20 +7,24 @@ struct SettingsView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @Query(sort: Pattern.listOrder) private var patterns: [Pattern]
+    @Environment(PurchaseManager.self) private var purchases
 
-    /// Replaced by the real purchase state in Step 6.
-    @State private var isUnlocked = false
-    @State private var showingPaywall = false
+    @State private var paywall: PaywallTrigger?
     @State private var editingPattern: Pattern?
+
+    private var isUnlocked: Bool { purchases.isUnlocked }
 
     var body: some View {
         NavigationStack {
             List {
                 patternsSection
-                CalendarSyncSection(isUnlocked: isUnlocked) { showingPaywall = true }
+                CalendarSyncSection(isUnlocked: isUnlocked) { paywall = .calendar }
                 widgetSection
                 unlockSection
                 AboutSection()
+            }
+            .onAppear {
+                if DemoData.opensPaywall { paywall = .settings }
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
@@ -32,9 +36,8 @@ struct SettingsView: View {
                     Button("Done") { dismiss() }
                 }
             }
-            .sheet(isPresented: $showingPaywall) {
-                // Paywall arrives in Step 6.
-                PlaceholderSheet(title: "Unlock everything", detail: "Paywall is built in Step 6.")
+            .fullScreenCover(item: $paywall) { trigger in
+                PaywallView(trigger: trigger)
             }
             .sheet(item: $editingPattern) { pattern in
                 PatternBuilderView(mode: .edit(pattern))
@@ -113,7 +116,7 @@ struct SettingsView: View {
             if isUnlocked {
                 NavigationLink("Add the widget") { WidgetExplainerView() }
             } else {
-                Button("Add the widget") { showingPaywall = true }
+                Button("Add the widget") { paywall = .widget }
                     .foregroundStyle(.primary)
                     .accessibilityHint("Requires the unlock")
             }
@@ -127,7 +130,7 @@ struct SettingsView: View {
             if isUnlocked {
                 Label("Unlocked, thank you.", systemImage: "checkmark.seal")
             } else {
-                Button("Unlock everything — £4.99") { showingPaywall = true }
+                Button("Unlock everything — \(purchases.priceText)") { paywall = .settings }
                     .foregroundStyle(.primary)
             }
         }

@@ -6,6 +6,7 @@ import OSLog
 @main
 struct RotaApp: App {
     private let container: ModelContainer
+    @State private var purchases = PurchaseManager()
 
     init() {
         if DemoData.isRequested {
@@ -20,6 +21,8 @@ struct RotaApp: App {
     var body: some Scene {
         WindowGroup {
             MonthView()
+                .environment(purchases)
+                .task { await purchases.load() }
         }
         .modelContainer(container)
     }

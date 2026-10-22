@@ -28,7 +28,9 @@ targets:
   Rota:
     type: application
     platform: iOS
-    sources: [Rota]
+    sources:
+      - path: Rota
+        excludes: ["Rota.storekit"]
     dependencies:
       - target: RotaCore
         embed: true
@@ -50,13 +52,17 @@ targets:
   RotaTests:
     type: bundle.unit-test
     platform: iOS
-    sources: [RotaTests]
+    sources:
+      - RotaTests
+      - path: Rota/Rota.storekit
+        buildPhase: resources
     info:
       path: RotaTests/Info.plist
       properties: {}
     dependencies:
       - target: RotaCore
       - target: Rota
+      - sdk: StoreKitTest.framework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.yourname.rota.tests
@@ -69,6 +75,7 @@ schemes:
         RotaTests: [test]
     run:
       config: Debug
+      storeKitConfiguration: Rota/Rota.storekit
     test:
       config: Debug
       targets: [RotaTests]

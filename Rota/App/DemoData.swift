@@ -18,7 +18,13 @@ enum DemoData {
     static var isRequested: Bool { CommandLine.arguments.contains(launchArgument) }
     static var opensBuilder: Bool { isRequested && CommandLine.arguments.contains(builderArgument) }
     static var opensDay: Bool { isRequested && CommandLine.arguments.contains(dayArgument) }
-    static var opensSettings: Bool { isRequested && CommandLine.arguments.contains(settingsArgument) }
+    /// With `--demo`, opens Settings and then the paywall (screenshots).
+    static let paywallArgument = "--demo-paywall"
+
+    static var opensSettings: Bool {
+        isRequested && (CommandLine.arguments.contains(settingsArgument) || opensPaywall)
+    }
+    static var opensPaywall: Bool { isRequested && CommandLine.arguments.contains(paywallArgument) }
 
     @MainActor
     static func seed(_ container: ModelContainer) {

@@ -5,7 +5,7 @@ import SwiftData
 
 /// The one SwiftData container, shared between the app and the widget via the App Group.
 public enum Store {
-    public static let appGroupID = "group.com.yourname.rota"
+    public static let appGroupID = AppGroup.id
 
     public static let schema = Schema([Pattern.self, Override.self])
 

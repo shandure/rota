@@ -1,0 +1,41 @@
+{
+  "identifier" : "A1B2C3D4",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "7E8F9A0B",
+      "localizations" : [
+        {
+          "description" : "Multiple patterns, shifts in your Calendar app, and the home screen widget.",
+          "displayName" : "Unlock everything",
+          "locale" : "en_GB"
+        }
+      ],
+      "productID" : "com.yourname.rota.unlock",
+      "referenceName" : "Unlock everything",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "",
+    "_developerTeamID" : "",
+    "_failTransactionsEnabled" : false,
+    "_lastSynced" : 0,
+    "_locale" : "en_GB",
+    "_storeKitErrors" : [
+
+    ],
+    "_storefront" : "GBR"
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}
