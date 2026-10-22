@@ -8,6 +8,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: Pattern.listOrder) private var patterns: [Pattern]
     @Environment(PurchaseManager.self) private var purchases
+    @Environment(CalendarSync.self) private var calendarSync
 
     @State private var paywall: PaywallTrigger?
     @State private var editingPattern: Pattern?
@@ -91,6 +92,7 @@ struct SettingsView: View {
         for p in patterns { p.isActive = (p.persistentModelID == pattern.persistentModelID) }
         try? context.save()
         WidgetReloader.reload()
+        calendarSync.dataChanged()
     }
 
     private func delete(at offsets: IndexSet) {
@@ -102,6 +104,7 @@ struct SettingsView: View {
         }
         try? context.save()
         WidgetReloader.reload()
+        calendarSync.dataChanged()
     }
 
     private func move(from source: IndexSet, to destination: Int) {

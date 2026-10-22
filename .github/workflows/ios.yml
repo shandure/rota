@@ -65,6 +65,13 @@ jobs:
           echo "name=$NAME" >> "$GITHUB_OUTPUT"
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
+      - name: Grant calendar access to the test host
+        run: |
+          UDID="${{ steps.sim.outputs.udid }}"
+          xcrun simctl boot "$UDID" 2>/dev/null || true
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl privacy "$UDID" grant calendar "$BUNDLE_ID" || echo "privacy grant failed (tests will skip)"
+
       - name: Build and run tests
         run: |
           set -o pipefail

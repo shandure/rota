@@ -7,21 +7,25 @@ import OSLog
 struct RotaApp: App {
     private let container: ModelContainer
     @State private var purchases = PurchaseManager()
+    @State private var calendarSync: CalendarSync
 
     init() {
+        let container: ModelContainer
         if DemoData.isRequested {
-            let demo = try! Store.sharedContainer(inMemory: true)
-            DemoData.seed(demo)
-            container = demo
+            container = try! Store.sharedContainer(inMemory: true)
+            DemoData.seed(container)
         } else {
             container = Self.makeContainer()
         }
+        self.container = container
+        _calendarSync = State(initialValue: CalendarSync(container: container))
     }
 
     var body: some Scene {
         WindowGroup {
             MonthView()
                 .environment(purchases)
+                .environment(calendarSync)
                 .task {
                     if !PurchaseManager.isRunningTests { await purchases.load() }
                 }

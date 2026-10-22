@@ -11,6 +11,7 @@ struct DayDetailView: View {
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
+    @Environment(CalendarSync.self) private var calendarSync
     @State private var note = ""
 
     private var calendar: Calendar { .current }
@@ -138,5 +139,6 @@ struct DayDetailView: View {
     private func save() {
         try? context.save()
         WidgetReloader.reload()
+        calendarSync.dataChanged()
     }
 }

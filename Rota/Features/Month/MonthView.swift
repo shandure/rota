@@ -6,6 +6,7 @@ import RotaCore
 struct MonthView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: Pattern.listOrder) private var patterns: [Pattern]
+    @Environment(CalendarSync.self) private var calendarSync
 
     @State private var visibleMonth = RotaEngine.startOfMonth(containing: Calendar.current.startOfDay(for: .now))
     @State private var slideFrom: Edge = .trailing
@@ -151,5 +152,6 @@ struct MonthView: View {
         for p in patterns { p.isActive = (p.persistentModelID == pattern.persistentModelID) }
         try? context.save()
         WidgetReloader.reload()
+        calendarSync.dataChanged()
     }
 }

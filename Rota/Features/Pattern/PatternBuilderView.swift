@@ -22,6 +22,7 @@ struct PatternBuilderView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: Pattern.listOrder) private var patterns: [Pattern]
     @Environment(PurchaseManager.self) private var purchases
+    @Environment(CalendarSync.self) private var calendarSync
 
     @State private var showingPaywall = false
     @State private var saveAfterPaywall = false
@@ -248,6 +249,7 @@ struct PatternBuilderView: View {
         }
         try? context.save()
         WidgetReloader.reload()
+        calendarSync.dataChanged()
         dismiss()
     }
 
@@ -259,6 +261,7 @@ struct PatternBuilderView: View {
         }
         try? context.save()
         WidgetReloader.reload()
+        calendarSync.dataChanged()
         dismiss()
     }
 }

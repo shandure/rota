@@ -46,6 +46,7 @@ targets:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
+        NSCalendarsFullAccessUsageDescription: Rota adds your shifts to a calendar of its own. It never changes your other calendars.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.yourname.rota
