@@ -27,6 +27,16 @@ final class PurchaseTests: XCTestCase {
         Entitlement.isUnlocked = false
     }
 
+    func testConfigurationFileIsInTheTestBundle() throws {
+        let url = try XCTUnwrap(Bundle(for: PurchaseTests.self).url(forResource: "Rota", withExtension: "storekit"),
+                                "Rota.storekit missing from the test bundle")
+        let data = try Data(contentsOf: url)
+        let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let products = try XCTUnwrap(json["products"] as? [[String: Any]])
+        XCTAssertEqual(products.first?["productID"] as? String, PurchaseManager.productID)
+        print("StoreKit config at \(url.path); storefront \(session.storefront); session transactions \(session.allTransactions().count)")
+    }
+
     func testProductLoadsWithLocalPriceAndStartsLocked() async throws {
         let manager = try await loadedManager()
         XCTAssertEqual(manager.product?.id, PurchaseManager.productID)
