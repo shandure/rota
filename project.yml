@@ -18,6 +18,9 @@ targets:
     type: framework
     platform: iOS
     sources: [RotaCore]
+    info:
+      path: RotaCore/Info.plist
+      properties: {}
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.yourname.rota.core
