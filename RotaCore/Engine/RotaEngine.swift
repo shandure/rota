@@ -1,9 +1,10 @@
 import Foundation
 
 /// The resolved shift for one calendar day.
-public struct DayShift: Hashable, Sendable {
+public struct DayShift: Hashable, Sendable, Identifiable {
     /// Start of day in the calendar the engine was asked with.
     public let date: Date
+    public var id: Date { date }
     public let shift: ShiftType
     /// True when an `Override` supplied the shift instead of the cycle.
     public let isOverride: Bool

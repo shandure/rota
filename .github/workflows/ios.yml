@@ -10,11 +10,14 @@ concurrency:
   group: ios-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  BUNDLE_ID: com.yourname.rota
+
 jobs:
   build-and-test:
-    name: Build and test (iPhone simulator)
+    name: Build, test and screenshot (iPhone simulator)
     runs-on: macos-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
 
     steps:
       - uses: actions/checkout@v4
@@ -33,12 +36,17 @@ jobs:
       - name: Pick a simulator
         id: sim
         run: |
-          # Newest available iPhone simulator on this image, e.g. "iPhone 16".
-          NAME=$(xcrun simctl list devices available --json \
+          # Newest available iPhone simulator on this image, e.g. "iPhone 17".
+          JSON=$(xcrun simctl list devices available --json)
+          NAME=$(echo "$JSON" \
             | jq -r '.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | .name' \
             | grep -E '^iPhone [0-9]+$' | sort -V | tail -1)
-          echo "Using simulator: $NAME"
+          UDID=$(echo "$JSON" \
+            | jq -r --arg n "$NAME" '.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name == $n) | .udid' \
+            | head -1)
+          echo "Using simulator: $NAME ($UDID)"
           echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
       - name: Build and run tests
         run: |
@@ -46,10 +54,42 @@ jobs:
           xcodebuild test \
             -project Rota.xcodeproj \
             -scheme Rota \
-            -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.name }}" \
+            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.udid }}" \
+            -derivedDataPath DerivedData \
             -resultBundlePath TestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO \
             | xcbeautify --renderer github-actions
+
+      - name: Screenshots (demo data, light and dark, plus empty state)
+        if: always()
+        run: |
+          UDID="${{ steps.sim.outputs.udid }}"
+          APP=$(find DerivedData/Build/Products/Debug-iphonesimulator -maxdepth 1 -name "Rota.app" | head -1)
+          if [ -z "$APP" ]; then echo "No Rota.app built; skipping screenshots"; exit 0; fi
+          xcrun simctl boot "$UDID" 2>/dev/null || true
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" "$APP"
+          mkdir -p screenshots
+          shot () {  # shot <file> <appearance> [launch args...]
+            local file=$1 mode=$2; shift 2
+            xcrun simctl ui "$UDID" appearance "$mode"
+            xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
+            xcrun simctl launch "$UDID" "$BUNDLE_ID" "$@"
+            sleep 6
+            xcrun simctl io "$UDID" screenshot "screenshots/$file"
+          }
+          shot month-light.png light --demo
+          shot month-dark.png dark --demo
+          shot empty-light.png light
+          ls -la screenshots
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots
+          if-no-files-found: ignore
 
       - name: Upload test results
         if: always()

@@ -1,12 +1,38 @@
 import SwiftUI
+import SwiftData
 import RotaCore
+import OSLog
 
-// Placeholder app entry for Step 1. Replaced by the Month screen in Step 2.
 @main
 struct RotaApp: App {
+    private let container: ModelContainer
+
+    init() {
+        if DemoData.isRequested {
+            let demo = try! Store.sharedContainer(inMemory: true)
+            DemoData.seed(demo)
+            container = demo
+        } else {
+            container = Self.makeContainer()
+        }
+    }
+
     var body: some Scene {
         WindowGroup {
-            Text("Rota")
+            MonthView()
+        }
+        .modelContainer(container)
+    }
+
+    /// The shared App Group store, falling back to a local store if the group container is
+    /// unavailable (e.g. a build without the entitlement). Data is never silently discarded.
+    private static func makeContainer() -> ModelContainer {
+        do {
+            return try Store.sharedContainer()
+        } catch {
+            Logger(subsystem: "com.yourname.rota", category: "store")
+                .error("App Group store unavailable, using local store: \(error.localizedDescription)")
+            return try! Store.localContainer()
         }
     }
 }

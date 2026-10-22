@@ -21,5 +21,12 @@ public enum Store {
         }
         return try ModelContainer(for: schema, configurations: [configuration])
     }
+
+    /// A persistent store in the app's own container, not shared with the widget.
+    /// Only used as a fallback when the App Group container cannot be opened.
+    public static func localContainer() throws -> ModelContainer {
+        let configuration = ModelConfiguration("Rota", schema: schema)
+        return try ModelContainer(for: schema, configurations: [configuration])
+    }
 }
 #endif
