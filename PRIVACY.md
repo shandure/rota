@@ -19,6 +19,6 @@ Deleting the app deletes everything it stored on your phone. Calendar events Rot
 
 ## Contact
 
-Questions about this policy: see the Send feedback link in the app's Settings.
+Questions about this policy: rotashiftapp@gmail.com, or the Send feedback link in the app's Settings.
 
 Last updated: 22 October 2026.

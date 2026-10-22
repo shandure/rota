@@ -4,7 +4,7 @@ import SwiftUI
 struct AboutSection: View {
     /// Set once the app exists in App Store Connect.
     static let appStoreID = "0000000000"
-    static let feedbackAddress = "feedback@yourname.app"
+    static let feedbackAddress = "rotashiftapp@gmail.com"
 
     private var version: String {
         let info = Bundle.main.infoDictionary
