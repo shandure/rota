@@ -52,7 +52,6 @@ struct SettingsView: View {
                 } label: {
                     HStack {
                         Text(pattern.name)
-                            .foregroundStyle(.primary)
                         Spacer()
                         if pattern.isActive {
                             Image(systemName: "checkmark")
@@ -61,6 +60,7 @@ struct SettingsView: View {
                         }
                     }
                 }
+                .foregroundStyle(.primary)
                 .accessibilityLabel(pattern.isActive ? "\(pattern.name), active" : pattern.name)
                 .accessibilityHint(pattern.isActive ? "" : "Makes this the active pattern")
                 .swipeActions(edge: .leading) {
