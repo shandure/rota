@@ -73,9 +73,12 @@ final class PersistenceTests: XCTestCase {
         let october = RotaEngine.shifts(in: Fixtures.month(2026, 10), for: pattern, calendar: Fixtures.london)
         XCTAssertEqual(october.filter(\.isOverride).count, 1)
         let summary = RotaEngine.summary(of: october)
-        XCTAssertFalse(summary.shifts == RotaEngine.summary(of: RotaEngine.shifts(in: Fixtures.month(2026, 10),
-                                                                                    for: pattern.snapshotWithoutOverrides,
-                                                                                    calendar: Fixtures.london)).shifts)
+        let plain = pattern.snapshotWithoutOverrides
+        let plainSummary = RotaEngine.summary(of: RotaEngine.shifts(in: Fixtures.month(2026, 10), for: plain, calendar: Fixtures.london))
+        let underlying = RotaEngine.shift(on: holidayDay, for: plain, calendar: Fixtures.london)
+        let lost = underlying.isWorked ? 1 : 0
+        XCTAssertEqual(summary.shifts, plainSummary.shifts - lost)
+        XCTAssertEqual(summary.off, plainSummary.off + lost)
     }
 
     func testDeletingPatternCascadesToOverrides() throws {
