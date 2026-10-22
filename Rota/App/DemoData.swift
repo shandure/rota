@@ -6,8 +6,11 @@ import RotaCore
 /// Never used in a normal launch.
 enum DemoData {
     static let launchArgument = "--demo"
+    /// With `--demo`, opens the pattern builder on the demo pattern at launch (screenshots).
+    static let builderArgument = "--demo-builder"
 
     static var isRequested: Bool { CommandLine.arguments.contains(launchArgument) }
+    static var opensBuilder: Bool { isRequested && CommandLine.arguments.contains(builderArgument) }
 
     @MainActor
     static func seed(_ container: ModelContainer) {

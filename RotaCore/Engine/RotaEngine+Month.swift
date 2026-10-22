@@ -29,6 +29,19 @@ public extension RotaEngine {
         return (0..<7).map { symbols[(calendar.firstWeekday - 1 + $0) % 7] }
     }
 
+    /// The weekday initial for one date, e.g. "T" for a Thursday.
+    static func weekdayInitial(for date: Date, calendar: Calendar = .current) -> String {
+        let symbols = calendar.veryShortStandaloneWeekdaySymbols
+        return symbols[(calendar.component(.weekday, from: date) - 1) % 7]
+    }
+
+    /// The 14-day preview interval starting on `today` (§4.2 step 6).
+    static func previewInterval(from today: Date, days: Int = 14, calendar: Calendar = .current) -> DateInterval {
+        let start = canonicalDay(today, calendar: calendar)
+        let end = calendar.date(byAdding: .day, value: days, to: start) ?? start
+        return DateInterval(start: start, end: end)
+    }
+
     /// Counts for the summary strip (§4.1): "14 shifts · 8 nights · 16 off".
     struct Summary: Hashable, Sendable {
         /// Worked shifts (`ShiftType.isWorked`): Off, Holiday and Sick excluded.

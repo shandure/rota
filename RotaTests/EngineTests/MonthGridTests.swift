@@ -51,6 +51,19 @@ final class MonthGridTests: XCTestCase {
         XCTAssertEqual(RotaEngine.weekdayInitials(calendar: sunday), ["S", "M", "T", "W", "T", "F", "S"])
     }
 
+    func testWeekdayInitialForDate() {
+        XCTAssertEqual(RotaEngine.weekdayInitial(for: Fixtures.day(2026, 10, 22), calendar: london), "T") // Thursday
+        XCTAssertEqual(RotaEngine.weekdayInitial(for: Fixtures.day(2026, 10, 25), calendar: london), "S") // Sunday
+        XCTAssertEqual(RotaEngine.weekdayInitial(for: Fixtures.day(2026, 1, 5), calendar: london), "M")   // Monday
+    }
+
+    func testPreviewIntervalIsFourteenDays() {
+        let interval = RotaEngine.previewInterval(from: Fixtures.day(2026, 3, 25), calendar: london)
+        XCTAssertEqual(interval.start, Fixtures.day(2026, 3, 25))
+        XCTAssertEqual(interval.end, Fixtures.day(2026, 4, 8))   // across the March clock change
+        XCTAssertEqual(RotaEngine.shifts(in: interval, for: Fixtures.pattern(), calendar: london).count, 14)
+    }
+
     func testSummaryCountsForJanuary() {
         // Hand count from CycleTests: 8 days + 7 nights worked, 16 off.
         let p = Fixtures.pattern()

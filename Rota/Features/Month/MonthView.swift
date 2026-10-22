@@ -10,6 +10,7 @@ struct MonthView: View {
     @State private var visibleMonth = RotaEngine.startOfMonth(containing: Calendar.current.startOfDay(for: .now))
     @State private var slideFrom: Edge = .trailing
     @State private var selectedDay: DayShift?
+    @State private var builder: PatternBuilderView.Mode?
     @State private var placeholder: Placeholder?
 
     private var calendar: Calendar { .current }
@@ -23,8 +24,11 @@ struct MonthView: View {
                 if let pattern = activePattern {
                     monthContent(for: pattern)
                 } else {
-                    EmptyRotaView { placeholder = .patternBuilder }
+                    EmptyRotaView { builder = .create }
                 }
+            }
+            .onAppear {
+                if DemoData.opensBuilder, let pattern = activePattern { builder = .edit(pattern) }
             }
             .navigationTitle(visibleMonth.formatted(.dateTime.month(.wide).year()))
             .navigationBarTitleDisplayMode(.large)
@@ -33,6 +37,9 @@ struct MonthView: View {
                 // Day Detail arrives in Step 4; this keeps tap-through working meanwhile.
                 PlaceholderSheet(title: day.date.formatted(.dateTime.weekday(.wide).day().month(.wide)),
                                  detail: day.shift.spokenName)
+            }
+            .sheet(item: $builder) { mode in
+                PatternBuilderView(mode: mode)
             }
             .sheet(item: $placeholder) { item in
                 PlaceholderSheet(title: item.title, detail: item.detail)
@@ -111,9 +118,9 @@ struct MonthView: View {
                     }
                 }
                 if !patterns.isEmpty { Divider() }
-                Button("New pattern…") { placeholder = .patternBuilder }
-                if activePattern != nil {
-                    Button("Edit pattern…") { placeholder = .patternBuilder }
+                Button("New pattern…") { builder = .create }
+                if let active = activePattern {
+                    Button("Edit pattern…") { builder = .edit(active) }
                 }
             } label: {
                 Label("Patterns", systemImage: "rectangle.stack")
@@ -145,19 +152,17 @@ struct MonthView: View {
 // MARK: - Placeholders for screens built in later steps
 
 private enum Placeholder: String, Identifiable {
-    case patternBuilder, settings
+    case settings
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .patternBuilder: return "Pattern builder"
         case .settings: return "Settings"
         }
     }
 
     var detail: String {
         switch self {
-        case .patternBuilder: return "Built in Step 3."
         case .settings: return "Built in Step 5."
         }
     }
