@@ -140,12 +140,14 @@ struct MonthView: View {
         withAnimation(.smooth) {
             visibleMonth = RotaEngine.startOfMonth(containing: target, calendar: calendar)
         }
+        Analytics.track(.monthChanged(direction: months > 0 ? .forward : .back))
     }
 
     private func goToToday() {
         let target = RotaEngine.startOfMonth(containing: today, calendar: calendar)
         slideFrom = target > visibleMonth ? .trailing : .leading
         withAnimation(.smooth) { visibleMonth = target }
+        Analytics.track(.monthChanged(direction: .today))
     }
 
     private func activate(_ pattern: Pattern) {

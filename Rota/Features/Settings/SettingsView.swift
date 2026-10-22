@@ -98,7 +98,11 @@ struct SettingsView: View {
     private func delete(at offsets: IndexSet) {
         let doomed = offsets.map { patterns[$0] }
         let deletingActive = doomed.contains { $0.isActive }
-        for pattern in doomed { context.delete(pattern) }
+        let today = Calendar.current.startOfDay(for: .now)
+        for pattern in doomed {
+            Analytics.track(.patternDeleted(ageDays: RotaEngine.daysBetween(pattern.createdAt, today)))
+            context.delete(pattern)
+        }
         if deletingActive, let next = patterns.first(where: { p in !doomed.contains { $0.persistentModelID == p.persistentModelID } }) {
             next.isActive = true
         }

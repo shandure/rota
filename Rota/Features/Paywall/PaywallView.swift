@@ -80,6 +80,7 @@ struct PaywallView: View {
             }
         }
         .padding(Spacing.screen)
+        .onAppear { Analytics.track(.paywallShown(trigger: trigger)) }
         .task { await purchases.load() }
         .onChange(of: purchases.isUnlocked) { _, unlocked in
             if unlocked { succeed() }

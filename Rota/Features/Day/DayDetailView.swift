@@ -100,6 +100,7 @@ struct DayDetailView: View {
             deleteOverride()
         } else {
             upsert(shift: shift.isSameType(as: cycleShift) ? cycleShift : shift)
+            Analytics.track(.overrideSet(kind: AnalyticsEvent.overrideKind(for: shift), hasNote: trimmedNote != nil))
         }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         save()

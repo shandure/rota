@@ -79,6 +79,7 @@ final class PurchaseManager {
             guard case .verified(let transaction) = verification else { throw PurchaseError.unverified }
             await transaction.finish()
             setUnlocked(true)
+            Analytics.track(.purchaseCompleted(price: product.displayPrice))
             return .purchased
         case .userCancelled:
             return .cancelled
@@ -92,6 +93,7 @@ final class PurchaseManager {
     func restore() async throws {
         try await AppStore.sync()
         await refreshEntitlement()
+        if isUnlocked { Analytics.track(.purchaseRestored) }
     }
 
     // MARK: Private

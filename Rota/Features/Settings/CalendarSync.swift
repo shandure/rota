@@ -28,8 +28,10 @@ final class CalendarSync {
         lastError = nil
         guard await exporter.requestAccess() else {
             lastError = "Calendar access was not allowed. You can allow it in Settings, Privacy & Security, Calendars."
+            Analytics.track(.calendarSyncToggled(on: true, permissionGranted: false))
             return false
         }
+        Analytics.track(.calendarSyncToggled(on: true, permissionGranted: true))
         setEnabled(true)
         await resync()
         return lastError == nil
@@ -38,6 +40,7 @@ final class CalendarSync {
     /// Deletes the app's calendars and turns the preference off.
     func disable() {
         lastError = nil
+        Analytics.track(.calendarSyncToggled(on: false, permissionGranted: exporter.hasAccess))
         setEnabled(false)
         do {
             try exporter.removeCalendars(except: nil)

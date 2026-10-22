@@ -7,9 +7,14 @@ options:
     iOS: "17.0"
   xcodeVersion: "15.4"
   createIntermediateGroups: true
+packages:
+  PostHog:
+    url: https://github.com/PostHog/posthog-ios
+    majorVersion: 3.0.0
 settings:
   base:
     SWIFT_VERSION: "5"
+    POSTHOG_API_KEY: ""            # set per build (CI secret / xcconfig); empty disables analytics
     TARGETED_DEVICE_FAMILY: "1"          # iPhone only
     MARKETING_VERSION: "1.0"
     CURRENT_PROJECT_VERSION: "1"
@@ -35,6 +40,7 @@ targets:
       - target: RotaCore
         embed: true
       - target: RotaWidget
+      - package: PostHog
     entitlements:
       path: Rota/Rota.entitlements
       properties:
@@ -47,6 +53,7 @@ targets:
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
         NSCalendarsFullAccessUsageDescription: Rota adds your shifts to a calendar of its own. It never changes your other calendars.
+        PostHogAPIKey: $(POSTHOG_API_KEY)
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.yourname.rota

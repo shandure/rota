@@ -19,7 +19,10 @@ struct RotaApp: App {
         }
         self.container = container
         _calendarSync = State(initialValue: CalendarSync(container: container))
+        Analytics.start()
     }
+
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
@@ -31,6 +34,16 @@ struct RotaApp: App {
                 }
         }
         .modelContainer(container)
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { trackAppOpened() }
+        }
+    }
+
+    private func trackAppOpened() {
+        let count = (try? container.mainContext.fetchCount(FetchDescriptor<Pattern>())) ?? 0
+        Analytics.track(.appOpened(patternCount: count,
+                                   hasPurchased: purchases.isUnlocked,
+                                   calendarSyncOn: calendarSync.isEnabled))
     }
 
     /// The shared App Group store, falling back to a local store if the group container is

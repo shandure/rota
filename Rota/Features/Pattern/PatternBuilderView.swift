@@ -241,11 +241,15 @@ struct PatternBuilderView: View {
                                   sortOrder: (patterns.map(\.sortOrder).max() ?? -1) + 1)
             for existing in patterns { existing.isActive = false }
             context.insert(pattern)
+            Analytics.track(.patternCreated(cycleLength: cycle.count,
+                                            preset: (selectedPreset == .custom ? nil : selectedPreset)?.analyticsName ?? "custom",
+                                            distinctShiftKinds: Set(cycle.map(\.kind)).count))
         case .edit(let pattern):
             pattern.name = trimmedName
             pattern.startDate = day
             pattern.cycle = cycle
             // Overrides are untouched (§4.2: saving an edited pattern keeps existing overrides).
+            Analytics.track(.patternEdited(cycleLength: cycle.count))
         }
         try? context.save()
         WidgetReloader.reload()
@@ -255,6 +259,7 @@ struct PatternBuilderView: View {
 
     private func delete(_ pattern: Pattern) {
         let wasActive = pattern.isActive
+        Analytics.track(.patternDeleted(ageDays: RotaEngine.daysBetween(pattern.createdAt, today, calendar: calendar)))
         context.delete(pattern)
         if wasActive, let next = patterns.first(where: { $0.persistentModelID != pattern.persistentModelID }) {
             next.isActive = true
