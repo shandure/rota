@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  BUNDLE_ID: com.yourname.rota
+  BUNDLE_ID: com.rotashift.rota
 
 jobs:
   build-and-test:

@@ -52,7 +52,7 @@ struct RotaApp: App {
         do {
             return try Store.sharedContainer()
         } catch {
-            Logger(subsystem: "com.yourname.rota", category: "store")
+            Logger(subsystem: "com.rotashift.rota", category: "store")
                 .error("App Group store unavailable, using local store: \(error.localizedDescription)")
             return try! Store.localContainer()
         }

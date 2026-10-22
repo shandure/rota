@@ -15,7 +15,7 @@
           "locale" : "en_GB"
         }
       ],
-      "productID" : "com.yourname.rota.unlock",
+      "productID" : "com.rotashift.rota.unlock",
       "referenceName" : "Unlock everything",
       "type" : "NonConsumable"
     }

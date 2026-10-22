@@ -6,7 +6,7 @@ import RotaCore
 @MainActor
 @Observable
 final class PurchaseManager {
-    static let productID = "com.yourname.rota.unlock"
+    static let productID = "com.rotashift.rota.unlock"
     /// Shown until the App Store price has loaded.
     static let fallbackPrice = "£4.99"
 
