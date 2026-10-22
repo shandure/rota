@@ -56,9 +56,9 @@ jobs:
           EOF
 
       - name: Archive (build number = run number)
-        # Signed with automatic (development) signing so the App Group entitlement is embedded
-        # in the archive; an unsigned archive loses it at export. Automatic development signing
-        # needs at least one registered device on the team. Export then re-signs for distribution.
+        # Ad-hoc signed ("-"): needs no profile, certificate or registered device, but still
+        # embeds the entitlements (App Group) in the archive. An unsigned archive loses them at
+        # export. The export step re-signs for distribution with the API key.
         run: |
           set -o pipefail
           xcodebuild archive \
@@ -67,12 +67,12 @@ jobs:
             -configuration Release \
             -destination "generic/platform=iOS" \
             -archivePath build/Rota.xcarchive \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$HOME/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8" \
-            -authenticationKeyID "${{ secrets.ASC_KEY_ID }}" \
-            -authenticationKeyIssuerID "${{ secrets.ASC_ISSUER_ID }}" \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
-            CODE_SIGN_STYLE=Automatic \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY=- \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=YES \
+            PROVISIONING_PROFILE_SPECIFIER= \
             MARKETING_VERSION="${{ github.event.inputs.marketing_version }}" \
             CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
             POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
