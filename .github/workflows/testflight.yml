@@ -88,10 +88,24 @@ jobs:
             | xcbeautify --renderer github-actions
           echo "Uploaded build ${{ github.run_number }} (version ${{ github.event.inputs.marketing_version }}). It appears in TestFlight after Apple processes it, usually within 15 minutes."
 
+      - name: Export a local copy for inspection
+        if: always()
+        run: |
+          sed 's#<string>upload</string>#<string>export</string>#' ExportOptions.plist > ExportOptionsLocal.plist
+          xcodebuild -exportArchive \
+            -archivePath build/Rota.xcarchive \
+            -exportOptionsPlist ExportOptionsLocal.plist \
+            -exportPath build/local \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8" \
+            -authenticationKeyID "${{ secrets.ASC_KEY_ID }}" \
+            -authenticationKeyIssuerID "${{ secrets.ASC_ISSUER_ID }}" \
+            | xcbeautify --renderer github-actions || true
+
       - name: Show signed entitlements (app and widget)
         if: always()
         run: |
-          IPA=$(find build/export -name "*.ipa" | head -1)
+          IPA=$(find build/local -name "*.ipa" | head -1)
           if [ -z "$IPA" ]; then echo "No ipa found"; exit 0; fi
           rm -rf build/ipa && mkdir -p build/ipa && unzip -q "$IPA" -d build/ipa
           APP=$(find build/ipa/Payload -maxdepth 1 -name "*.app" | head -1)
