@@ -2,8 +2,8 @@ import SwiftUI
 
 /// Version, rate, feedback and the privacy line (§4.4).
 struct AboutSection: View {
-    /// Set once the app exists in App Store Connect.
-    static let appStoreID = "0000000000"
+    /// The app's Apple ID in App Store Connect (App Information → General Information).
+    static let appStoreID = "6825803214"
     static let feedbackAddress = "rotashiftapp@gmail.com"
 
     private var version: String {
