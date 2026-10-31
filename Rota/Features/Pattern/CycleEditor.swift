@@ -15,19 +15,22 @@ struct CycleCell: Identifiable, Codable, Hashable, Transferable {
 
 /// The reorderable cycle row, the shift-type buttons and the "Cycle: 8 days" line (§4.2 step 3).
 ///
-/// Reorder: long-press a cell and drag it onto another cell (or the end slot).
-/// Remove: tap a cell to show its "x". (The spec says long press, but on iOS a long press is
-/// what starts the drag, so tap reveals the "x" instead.)
+/// - Tap a cell to select it (ring + "x"). The shift buttons then replace that cell.
+/// - With nothing selected, the shift buttons append to the end of the cycle.
+/// - "x" on the selected cell removes it. Long-press and drag a cell to reorder.
 struct CycleEditor: View {
     @Binding var cells: [CycleCell]
+    /// The selected cell, if any. Owned by the builder so the custom-shift sheet can replace it too.
+    @Binding var selectedID: UUID?
     let onAddCustom: () -> Void
-
-    @State private var removableID: UUID?
 
     private static let cellSize: CGFloat = 44
     private let quickTypes: [ShiftType] = [.day, .night, .late, .early, .off]
 
     private var isFull: Bool { cells.count >= Limits.maxCycleLength }
+    private var selectedIndex: Int? { cells.firstIndex { $0.id == selectedID } }
+    /// Buttons are usable when they can replace the selection or there is room to append.
+    private var canApply: Bool { selectedIndex != nil || !isFull }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.s8) {
@@ -46,12 +49,12 @@ struct CycleEditor: View {
                 .padding(.vertical, Spacing.s8)
                 .padding(.trailing, Spacing.s8)
             }
-            .onTapGesture { removableID = nil }
+            .onTapGesture { selectedID = nil }
 
             HStack(spacing: Spacing.s8) {
                 ForEach(quickTypes, id: \.label) { shift in
                     Button {
-                        append(shift)
+                        apply(shift)
                     } label: {
                         Text(shift.label)
                             .font(Typography.cellLabel)
@@ -66,7 +69,7 @@ struct CycleEditor: View {
                             .foregroundStyle(shift.isOff ? Color.secondary : Palette.label(for: shift))
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Add \(shift.spokenName)")
+                    .accessibilityLabel(buttonLabel(for: shift))
                 }
                 Button(action: onAddCustom) {
                     Image(systemName: "plus")
@@ -78,11 +81,11 @@ struct CycleEditor: View {
                         }
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Add custom shift type")
+                .accessibilityLabel(selectedIndex == nil ? "Add custom shift type" : "Replace with a custom shift type")
             }
-            .disabled(isFull)
+            .disabled(!canApply)
 
-            Text(isFull ? "Cycle: \(cells.count) days (maximum)" : "Cycle: \(cells.count) \(cells.count == 1 ? "day" : "days")")
+            Text(statusText)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }
@@ -92,6 +95,7 @@ struct CycleEditor: View {
 
     private func cellView(_ cell: CycleCell, index: Int) -> some View {
         let shift = cell.shift
+        let isSelected = selectedID == cell.id
         return ZStack {
             RoundedRectangle(cornerRadius: Radius.cell)
                 .fill(Palette.fill(for: shift))
@@ -107,8 +111,14 @@ struct CycleEditor: View {
                 .padding(.horizontal, Spacing.s4)
         }
         .frame(width: Self.cellSize, height: Self.cellSize)
+        .overlay {
+            if isSelected {
+                RoundedRectangle(cornerRadius: Radius.cell)
+                    .strokeBorder(Color.primary, lineWidth: 2)
+            }
+        }
         .overlay(alignment: .topTrailing) {
-            if removableID == cell.id {
+            if isSelected {
                 Button {
                     remove(cell)
                 } label: {
@@ -124,15 +134,15 @@ struct CycleEditor: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            removableID = removableID == cell.id ? nil : cell.id
+            selectedID = isSelected ? nil : cell.id
         }
         .draggable(cell)
         .dropDestination(for: CycleCell.self) { dropped, _ in
             move(dropped, toIndex: index)
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("\(shift.spokenName), position \(index + 1) of \(cells.count)")
-        .accessibilityHint("Tap to show remove. Drag to reorder.")
+        .accessibilityLabel("\(shift.spokenName), position \(index + 1) of \(cells.count)\(isSelected ? ", selected" : "")")
+        .accessibilityHint(isSelected ? "Choose a shift below to replace it, or remove it." : "Tap to select. Drag to reorder.")
     }
 
     /// Drop target after the last cell.
@@ -147,17 +157,38 @@ struct CycleEditor: View {
             .accessibilityHidden(true)
     }
 
+    // MARK: Text
+
+    private var statusText: String {
+        let count = "Cycle: \(cells.count) \(cells.count == 1 ? "day" : "days")"
+        if let index = selectedIndex {
+            return "\(count) · day \(index + 1) selected, tap a shift to replace it"
+        }
+        if isFull { return "\(count) (maximum)" }
+        return cells.isEmpty ? count : "\(count) · tap a day to change it"
+    }
+
+    private func buttonLabel(for shift: ShiftType) -> String {
+        if let index = selectedIndex {
+            return "Replace day \(index + 1) with \(shift.spokenName)"
+        }
+        return "Add \(shift.spokenName)"
+    }
+
     // MARK: Mutations
 
-    private func append(_ shift: ShiftType) {
-        guard !isFull else { return }
-        cells.append(CycleCell(shift: shift))
-        removableID = nil
+    /// Replaces the selected cell, or appends when nothing is selected.
+    private func apply(_ shift: ShiftType) {
+        if let index = selectedIndex {
+            cells[index].shift = shift
+        } else if !isFull {
+            cells.append(CycleCell(shift: shift))
+        }
     }
 
     private func remove(_ cell: CycleCell) {
         cells.removeAll { $0.id == cell.id }
-        removableID = nil
+        selectedID = nil
     }
 
     /// Moves the dragged cell so it lands at `toIndex` in the current ordering.
@@ -165,7 +196,7 @@ struct CycleEditor: View {
         guard let item = dropped.first, let from = cells.firstIndex(where: { $0.id == item.id }) else { return false }
         let destination = toIndex > from ? toIndex + 1 : toIndex
         cells.move(fromOffsets: IndexSet(integer: from), toOffset: min(destination, cells.count))
-        removableID = nil
+        selectedID = nil
         return true
     }
 }

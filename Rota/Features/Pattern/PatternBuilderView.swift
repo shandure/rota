@@ -28,6 +28,7 @@ struct PatternBuilderView: View {
     @State private var saveAfterPaywall = false
     @State private var name: String
     @State private var cells: [CycleCell]
+    @State private var selectedCellID: UUID?
     @State private var startDate: Date
     @State private var showingTimes = false
     @State private var showingCustomSheet = false
@@ -103,7 +104,7 @@ struct PatternBuilderView: View {
                 }
 
                 Section("Cycle") {
-                    CycleEditor(cells: $cells) { showingCustomSheet = true }
+                    CycleEditor(cells: $cells, selectedID: $selectedCellID) { showingCustomSheet = true }
                         .padding(.vertical, Spacing.s4)
                 }
 
@@ -167,7 +168,12 @@ struct PatternBuilderView: View {
             }
             .sheet(isPresented: $showingCustomSheet) {
                 CustomShiftSheet { shift in
-                    if cells.count < Limits.maxCycleLength { cells.append(CycleCell(shift: shift)) }
+                    // Same rule as the shift buttons: replace the selected cell, else append.
+                    if let index = cells.firstIndex(where: { $0.id == selectedCellID }) {
+                        cells[index].shift = shift
+                    } else if cells.count < Limits.maxCycleLength {
+                        cells.append(CycleCell(shift: shift))
+                    }
                 }
             }
             .fullScreenCover(isPresented: $showingPaywall) {
@@ -226,6 +232,7 @@ struct PatternBuilderView: View {
 
     private func apply(_ preset: Preset) {
         cells = preset.cycle.map { CycleCell(shift: $0) }
+        selectedCellID = nil
     }
 
     private func save() {
