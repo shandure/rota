@@ -22,7 +22,7 @@ struct CustomShiftSheet: View {
         NavigationStack {
             Form {
                 Section("Label") {
-                    TextField("Twi", text: $label)
+                    TextField("Long", text: $label)
                         .focused($labelFocused)
                         .textInputAutocapitalization(.words)
                         .onChange(of: label) { _, value in
