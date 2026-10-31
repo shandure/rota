@@ -14,6 +14,11 @@ final class PurchaseTests: XCTestCase {
     private var session: SKTestSession!
 
     override func setUpWithError() throws {
+        // CI sets TEST_RUNNER_SKIP_STOREKIT_TESTS: the hosted runners cannot serve the local
+        // StoreKit configuration and the session can hang. These tests run on a Mac with Xcode.
+        if ProcessInfo.processInfo.environment["SKIP_STOREKIT_TESTS"] != nil {
+            throw XCTSkip("StoreKit tests are skipped on this runner (SKIP_STOREKIT_TESTS set)")
+        }
         session = try SKTestSession(configurationFileNamed: "Rota")
         session.disableDialogs = true
         session.clearTransactions()
@@ -21,7 +26,7 @@ final class PurchaseTests: XCTestCase {
     }
 
     override func tearDown() {
-        session.clearTransactions()
+        session?.clearTransactions()
         Entitlement.isUnlocked = false
     }
 
@@ -97,7 +102,7 @@ final class PurchaseTests: XCTestCase {
     }
 
     /// StoreKit 1 product request, used only to diagnose an empty StoreKit 2 result.
-    private final class LegacyProductFetch: NSObject, SKProductsRequestDelegate {
+    private final class LegacyProductFetch: NSObject, SKProductsRequestDelegate, @unchecked Sendable {
         private var continuation: CheckedContinuation<String, Never>?
         private var request: SKProductsRequest?
 
