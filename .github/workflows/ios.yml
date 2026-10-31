@@ -101,10 +101,10 @@ jobs:
             -test-timeouts-enabled YES \
             -default-test-execution-time-allowance 60 \
             -maximum-test-execution-time-allowance 120 \
-            TEST_RUNNER_SKIP_STOREKIT_TESTS=1 \
+            -skip-testing:RotaTests/PurchaseTests \
             | xcbeautify --renderer github-actions
-          # StoreKit tests are skipped here: hosted runners cannot serve the local StoreKit
-          # configuration and the session hangs. They run on a Mac with Xcode.
+          # StoreKit tests are excluded here: hosted runners cannot serve the local StoreKit
+          # configuration and the test process dies when that class starts. They run on a Mac.
 
       - name: Screenshots (demo data; test device, largest iPhone, and iPhone SE)
         if: always()
