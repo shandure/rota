@@ -72,20 +72,36 @@ jobs:
           xcrun simctl bootstatus "$UDID" -b
           xcrun simctl privacy "$UDID" grant calendar "$BUNDLE_ID" || echo "privacy grant failed (tests will skip)"
 
-      - name: Build and run tests
+      - name: Build for testing
+        timeout-minutes: 25
         run: |
           set -o pipefail
-          xcodebuild test \
+          xcodebuild build-for-testing \
             -project Rota.xcodeproj \
             -scheme Rota \
             -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.udid }}" \
             -derivedDataPath DerivedData \
-            -resultBundlePath TestResults.xcresult \
             CODE_SIGN_IDENTITY=- \
             CODE_SIGNING_REQUIRED=NO \
             POSTHOG_API_KEY="${{ secrets.POSTHOG_API_KEY }}" \
             | xcbeautify --renderer github-actions
           # Ad-hoc ("-") signing on the simulator embeds the App Group entitlement, which SwiftData requires.
+
+      - name: Run tests
+        timeout-minutes: 15
+        run: |
+          set -o pipefail
+          # Per-test time allowance so a stuck test fails with a name instead of hanging the job.
+          xcodebuild test-without-building \
+            -project Rota.xcodeproj \
+            -scheme Rota \
+            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.udid }}" \
+            -derivedDataPath DerivedData \
+            -resultBundlePath TestResults.xcresult \
+            -test-timeouts-enabled YES \
+            -default-test-execution-time-allowance 60 \
+            -maximum-test-execution-time-allowance 120 \
+            | xcbeautify --renderer github-actions
 
       - name: Screenshots (demo data; test device, largest iPhone, and iPhone SE)
         if: always()
