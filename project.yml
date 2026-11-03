@@ -68,6 +68,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.rotashift.rota
         INFOPLIST_KEY_UIUserInterfaceStyle: Automatic
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "1"          # iPhone only; XcodeGen's target default is "1,2"
   RotaWidget:
     type: app-extension
     platform: iOS
@@ -93,6 +94,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.rotashift.rota.widget
         SKIP_INSTALL: YES
+        TARGETED_DEVICE_FAMILY: "1"
   RotaTests:
     type: bundle.unit-test
     platform: iOS
