@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Rota: Shift Calendar</title>
+  <meta name="description" content="Enter your shift pattern once and see every shift forever. A calm, local-only rota calendar for iPhone, with a widget and Calendar export.">
+  <link rel="icon" href="img/icon-64.png" sizes="64x64" type="image/png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <meta property="og:title" content="Rota: Shift Calendar">
+  <meta property="og:description" content="Your shift pattern, forever. Enter it once; see every shift.">
+  <meta property="og:image" content="img/month-light-800.png">
+  <style>
+    :root {
+      --bg-light: #ffffff;      --bg-dark: #0b0b0c;
+      --panel-light: #f4f4f6;   --panel-dark: #17171a;
+      --text-light: #111111;    --text-dark: #f2f2f2;
+      --muted-light: #666670;   --muted-dark: #a0a0a8;
+      --line-light: #e2e2e6;    --line-dark: #2a2a2e;
+      --day: #FFA94D;
+      --night: #4C6EF5;
+
+      --bg: var(--bg-light);
+      --panel: var(--panel-light);
+      --text: var(--text-light);
+      --muted: var(--muted-light);
+      --line: var(--line-light);
+      @media (prefers-color-scheme: dark) {
+        --bg: var(--bg-dark);
+        --panel: var(--panel-dark);
+        --text: var(--text-dark);
+        --muted: var(--muted-dark);
+        --line: var(--line-dark);
+      }
+      @supports (color: light-dark(white, black)) {
+        --bg: light-dark(var(--bg-light), var(--bg-dark));
+        --panel: light-dark(var(--panel-light), var(--panel-dark));
+        --text: light-dark(var(--text-light), var(--text-dark));
+        --muted: light-dark(var(--muted-light), var(--muted-dark));
+        --line: light-dark(var(--line-light), var(--line-dark));
+      }
+      color-scheme: light dark;
+      accent-color: var(--night);
+    }
+
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 17px;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--bg);
+    }
+    a { color: var(--night); }
+    img { display: block; max-width: 100%; height: auto; }
+
+    .wrap { width: min(1040px, 100% - 32px); margin-inline: auto; }
+
+    header.top {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 0;
+    }
+    header.top img { width: 40px; height: 40px; border-radius: 9px; }
+    header.top .name { font-weight: 600; }
+
+    .hero {
+      display: grid; gap: 32px; align-items: center;
+      padding: 32px 0 48px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 760px) {
+      .hero { grid-template-columns: 1.1fr 0.9fr; padding: 48px 0 64px; }
+    }
+    h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; margin: 0 0 16px; letter-spacing: -0.02em; }
+    .lede { font-size: 1.25rem; color: var(--muted); margin: 0 0 24px; max-width: 32ch; }
+
+    .store {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--text); color: var(--bg);
+      text-decoration: none; font-weight: 600;
+      padding: 12px 20px; border-radius: 12px;
+    }
+    .store svg { width: 20px; height: 20px; fill: currentColor; }
+    .store small { display: block; font-weight: 400; font-size: 0.7rem; line-height: 1; opacity: 0.8; }
+    .store span { display: block; font-size: 1.05rem; line-height: 1.1; }
+    .fine { margin: 12px 0 0; color: var(--muted); font-size: 0.9rem; }
+
+    .phone {
+      width: min(300px, 80vw); margin-inline: auto;
+      border: 1px solid var(--line); border-radius: 36px; padding: 10px;
+      background: var(--panel);
+      box-shadow: 0 20px 60px -30px rgb(0 0 0 / 0.5);
+    }
+    .phone img, .phone picture { border-radius: 26px; overflow: hidden; }
+
+    section.features { padding: 24px 0 48px; }
+    .grid { display: grid; gap: 24px; grid-template-columns: 1fr; }
+    @media (min-width: 760px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+    .card {
+      background: var(--panel); border-radius: 16px; padding: 24px;
+      display: grid; gap: 12px; align-content: start;
+    }
+    .card h2 { font-size: 1.15rem; margin: 0; }
+    .card p { margin: 0; color: var(--muted); }
+    .card .phone { width: min(220px, 70vw); margin-top: 8px; border-radius: 28px; padding: 8px; }
+    .card .phone img { border-radius: 20px; }
+
+    .swatches { display: flex; gap: 8px; margin: 4px 0 0; }
+    .sw { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; font-size: 0.7rem; font-weight: 600; color: #fff; }
+    .sw.off { border: 1px solid var(--line); color: var(--muted); }
+
+    section.pricing { padding: 24px 0 48px; }
+    .tiers { display: grid; gap: 16px; grid-template-columns: 1fr; }
+    @media (min-width: 640px) { .tiers { grid-template-columns: 1fr 1fr; } }
+    .tier { border: 1px solid var(--line); border-radius: 16px; padding: 24px; }
+    .tier h3 { margin: 0 0 4px; font-size: 1.1rem; }
+    .tier .price { font-size: 1.6rem; font-weight: 700; margin: 0 0 12px; }
+    .tier ul { margin: 0; padding-left: 20px; color: var(--muted); }
+    .tier li { margin: 4px 0; }
+
+    section.privacy { padding: 8px 0 48px; }
+    section.privacy p { max-width: 60ch; color: var(--muted); margin: 0; }
+
+    footer { border-top: 1px solid var(--line); padding: 24px 0 40px; color: var(--muted); font-size: 0.9rem; }
+    footer nav { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 8px; }
+    footer a { color: inherit; }
+    h2.section { font-size: 1.5rem; margin: 0 0 20px; letter-spacing: -0.01em; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <img src="img/icon-64.png" width="40" height="40" alt="">
+      <span class="name">Rota</span>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <h1>Your shift pattern, forever.</h1>
+          <p class="lede">Enter your rota once, for example 2 days, 2 nights, 4 off. Rota shows every shift from then on.</p>
+          <a class="store" href="https://apps.apple.com/gb/app/id6825803214">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.37 12.6c0-2.3 1.88-3.4 1.97-3.46-1.07-1.57-2.74-1.78-3.33-1.8-1.42-.15-2.77.83-3.49.83-.72 0-1.83-.81-3.01-.79-1.55.02-2.98.9-3.78 2.29-1.61 2.8-.41 6.94 1.16 9.21.77 1.11 1.68 2.36 2.88 2.31 1.16-.05 1.6-.75 3-.75s1.8.75 3.02.73c1.25-.02 2.04-1.13 2.8-2.25.88-1.29 1.24-2.54 1.26-2.6-.03-.01-2.42-.93-2.48-3.72zM14.1 5.85c.64-.77 1.07-1.85.95-2.92-.92.04-2.03.61-2.69 1.38-.59.68-1.11 1.78-.97 2.83 1.02.08 2.07-.52 2.71-1.29z"/></svg>
+            <span><small>Download on the</small>App Store</span>
+          </a>
+          <p class="fine">Free for one pattern. iPhone, iOS 17 or later. No account, no adverts.</p>
+        </div>
+        <div class="phone">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" type="image/webp" srcset="img/month-dark-400.webp 1x, img/month-dark-800.webp 2x">
+            <source media="(prefers-color-scheme: dark)" type="image/png" srcset="img/month-dark-400.png">
+            <source type="image/webp" srcset="img/month-light-400.webp 1x, img/month-light-800.webp 2x">
+            <img src="img/month-light-400.png" width="400" height="870" fetchpriority="high"
+                 alt="Rota month view: a calendar grid with Day and Night shifts in orange and blue, holiday and sick days marked, and a summary of shifts, nights and days off.">
+          </picture>
+        </div>
+      </section>
+
+      <section class="features">
+        <h2 class="section">Built for people who work a repeating pattern</h2>
+        <div class="grid">
+          <article class="card">
+            <h2>Enter it once</h2>
+            <p>Pick a preset such as 4 on 4 off, 2D 2N 4 off or Mon to Fri, or build your own cycle. Choose any date you know the pattern started and the preview shows the next two weeks, so you can check it against your real rota before you save.</p>
+            <div class="phone">
+              <picture>
+                <source type="image/webp" srcset="img/builder-light-400.webp 1x, img/builder-light-800.webp 2x">
+                <img src="img/builder-light-400.png" width="400" height="870" loading="lazy"
+                     alt="The pattern builder: preset chips, a row of Day, Day, Night, Night, Off cells, and shift-type buttons.">
+              </picture>
+            </div>
+          </article>
+          <article class="card">
+            <h2>Life changes, so can any day</h2>
+            <p>Tap a day to swap a shift, mark a holiday or sick day, or leave a note like "Swapped with Sam". Edited days show a dot so you always know what differs from the pattern.</p>
+            <div class="phone">
+              <picture>
+                <source type="image/webp" srcset="img/day-light-400.webp 1x, img/day-light-800.webp 2x">
+                <img src="img/day-light-400.png" width="400" height="870" loading="lazy"
+                     alt="Day detail sheet showing Thursday 22 October, a Night 19:00 to 07:00 pill, and chips for Day, Night, Off, Holiday and Sick.">
+              </picture>
+            </div>
+          </article>
+          <article class="card">
+            <h2>Glanceable, on purpose</h2>
+            <p>Every shift type has its own colour, so a month reads at a glance in a car park at 6am. Light and dark mode, large text supported, and it works with VoiceOver.</p>
+            <div class="swatches" aria-label="Shift colours">
+              <div class="sw" style="background:#FFA94D">Day</div>
+              <div class="sw" style="background:#4C6EF5">Night</div>
+              <div class="sw" style="background:#F783AC">Late</div>
+              <div class="sw" style="background:#38D9A9;color:#111">Early</div>
+              <div class="sw off">Off</div>
+            </div>
+            <p>Holiday and sick days have colours of their own, and the summary strip counts shifts, nights and days off for the month.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="pricing">
+        <h2 class="section">One price, no subscription</h2>
+        <div class="tiers">
+          <div class="tier">
+            <h3>Free</h3>
+            <p class="price">£0</p>
+            <ul>
+              <li>One pattern</li>
+              <li>Month view with summary</li>
+              <li>Overrides and notes for any day</li>
+              <li>All the presets and custom cycles</li>
+            </ul>
+          </div>
+          <div class="tier">
+            <h3>Unlock everything</h3>
+            <p class="price">£4.99 once</p>
+            <ul>
+              <li>Multiple patterns</li>
+              <li>Your shifts in the Calendar app, kept in sync</li>
+              <li>Home screen widget: today, your next shift, the week ahead</li>
+              <li>Yours forever. No renewals.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="privacy">
+        <h2 class="section">All your data stays on your phone</h2>
+        <p>No accounts, no sign-in, no adverts. Your patterns and notes are stored on your device. Calendar export writes only to a calendar Rota creates, and removes it when you turn the option off. Read the <a href="privacy.html">privacy policy</a>.</p>
+      </section>
+    </main>
+
+    <footer>
+      <nav>
+        <a href="privacy.html">Privacy policy</a>
+        <a href="mailto:rotashiftapp@gmail.com">Send feedback</a>
+        <a href="https://github.com/shandure/rota">Source code</a>
+      </nav>
+      <div>Rota is made by one person in the UK. Apple and the App Store are trademarks of Apple Inc.</div>
+    </footer>
+  </div>
+</body>
+</html>

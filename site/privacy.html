@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Rota privacy policy</title>
+  <link rel="icon" href="img/icon-64.png" sizes="64x64" type="image/png">
+  <style>
+    :root {
+      --bg-light: #ffffff; --bg-dark: #0b0b0c;
+      --text-light: #111111; --text-dark: #f2f2f2;
+      --muted-light: #666670; --muted-dark: #a0a0a8;
+      --link: #4C6EF5;
+      --bg: var(--bg-light); --text: var(--text-light); --muted: var(--muted-light);
+      @media (prefers-color-scheme: dark) { --bg: var(--bg-dark); --text: var(--text-dark); --muted: var(--muted-dark); }
+      @supports (color: light-dark(white, black)) {
+        --bg: light-dark(var(--bg-light), var(--bg-dark));
+        --text: light-dark(var(--text-light), var(--text-dark));
+        --muted: light-dark(var(--muted-light), var(--muted-dark));
+      }
+      color-scheme: light dark;
+    }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 17px; line-height: 1.6; color: var(--text); background: var(--bg); }
+    a { color: var(--link); }
+    main { width: min(680px, 100% - 32px); margin: 32px auto 64px; }
+    h1 { font-size: 2rem; letter-spacing: -0.02em; }
+    h2 { font-size: 1.2rem; margin-top: 32px; }
+    .back { color: var(--muted); text-decoration: none; }
+    .date { color: var(--muted); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back" href="index.html">← Rota</a>
+    <h1>Rota privacy policy</h1>
+    <p>Rota is a shift calendar. All your data stays on your phone.</p>
+
+    <h2>What Rota stores</h2>
+    <p>Your shift patterns, overrides and notes are stored on your device, in the app's own storage, and shared only with Rota's home-screen widget on the same device. If you turn on "Add shifts to Calendar", Rota writes your shifts into a calendar it creates in your device's Calendar app, and removes that calendar when you turn the option off. Rota never reads or changes other calendars.</p>
+
+    <h2>What leaves your phone</h2>
+    <ul>
+      <li><strong>Purchases</strong> go through Apple's App Store. Rota never sees your payment details.</li>
+      <li><strong>Anonymous usage statistics</strong>, if enabled in a given build: counts and flags such as how many patterns exist, which preset was chosen, or that a month was changed. Pattern names, notes, dates and shift times are never sent. These statistics are not linked to you and contain nothing that identifies you. They are processed by PostHog on servers in the European Union.</li>
+    </ul>
+    <p>Nothing else is transmitted. Rota has no accounts, no sign-in, no advertising and no tracking across other apps or websites.</p>
+
+    <h2>Your choices</h2>
+    <p>Deleting the app deletes everything it stored on your phone. Calendar events Rota created are removed when you turn off "Add shifts to Calendar" before deleting the app, or can be deleted from the Calendar app by removing the calendar named after your pattern.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about this policy: <a href="mailto:rotashiftapp@gmail.com">rotashiftapp@gmail.com</a>.</p>
+
+    <p class="date">Last updated: 22 October 2026.</p>
+  </main>
+</body>
+</html>
